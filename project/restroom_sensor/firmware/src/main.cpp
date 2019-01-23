@@ -185,8 +185,11 @@ void handleNotificationMessage(const uint32_t current_time) {
 
   // 光センサ値を取得する
   const uint16_t light_sensor_value = analogRead(kLightSensorPin);
-  // 焦電センサ割り込み回数を取得する（割り込みによる変化に備えてコピーする）
+
+  // 焦電センサ割り込み回数を取得する
+  portENTER_CRITICAL(&g_pyroelectric_sensor_mutex);
   const uint32_t number_of_pyroelectric_sensor_interrupts = g_number_of_pyroelectric_sensor_interrupts;
+  portEXIT_CRITICAL(&g_pyroelectric_sensor_mutex);
 
   // 電文を送信する必要があるか？
   bool needs_send = false;
