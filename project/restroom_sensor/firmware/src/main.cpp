@@ -228,30 +228,16 @@ void handleControlMessage() {
     char buffer[256] = {};
     g_udp_control.read(buffer, sizeof(buffer));
 
-    // Serial.print("buffer: ");
-    // for ( int32_t i = 0; i < size; i++ ) {
-    //   Serial.print(buffer[i]);
-    // }
-    // Serial.println();
-
     StaticJsonBuffer<256> json_buffer;
     const JsonObject &root = json_buffer.parseObject(buffer);
     if ( root.success() ) {
       const String command = root["Command"].as<String>();
-      // Serial.print("command: ");
-      // Serial.println(command);
 
       if ( command == "SET_LED" ) {
         const JsonObject &color = root["Color"];
         const uint8_t red   = color["Red"];
         const uint8_t green = color["Green"];
         const uint8_t blue  = color["Blue"];
-        // Serial.print("red: ");
-        // Serial.println(red);
-        // Serial.print("green: ");
-        // Serial.println(green);
-        // Serial.print("blue: ");
-        // Serial.println(blue);
         setLedColor(RgbColor(red, green, blue));
       }
     }
@@ -262,8 +248,6 @@ void loop() {
   ArduinoOTA.handle();
 
   const uint32_t current_time = millis();  // [ms]
-  // Serial.print("current_time: ");
-  // Serial.println(current_time);
 
   // ディスカバリ電文を送信する（必要であれば）
   handleDiscoveryMessage(current_time);
