@@ -36,13 +36,15 @@ WiFiUDP g_udp_control;
 void IRAM_ATTR handlePyroelectricSensorInterrupt() {
   // 現在時刻 [ms]
   const uint32_t current_time = millis();
-  // 焦電センサの立ち下がりカウントが発生した最終時間 [ms]
-  static volatile uint32_t last_handled_time = 0;
+  // 焦電センサの立ち下がりが発生した最終時刻 [ms]
+  static volatile uint32_t s_last_handled_time = 0;
+  // 焦電センサの立ち下がりの処理間隔 [ms]
+  constexpr uint32_t kHandlingInterval = 1000 * 10;
 
-  if ( current_time - last_handled_time > 1000 * 10 ) {
+  if ( current_time - s_last_handled_time > kHandlingInterval ) {
     portENTER_CRITICAL_ISR(&g_pyroelectric_sensor_mutex);
     g_number_of_pyroelectric_sensor_interrupts++;
-    last_handled_time = current_time;
+    s_last_handled_time = current_time;
     portEXIT_CRITICAL_ISR(&g_pyroelectric_sensor_mutex);
   }
 }
@@ -66,7 +68,7 @@ void setupLed() {
   g_led.Show();
 }
 
-void setLedColor(RgbColor color) {
+void setLedColor(const RgbColor &color) {
   g_led.SetPixelColor(0, color);
   g_led.Show();
 }
@@ -136,15 +138,17 @@ void setup() {
 
 void handleDiscoveryMessage(const uint32_t current_time) {
   // 最後に電文を送信した時刻 [ms]
-  static uint32_t last_sent_message_time = 0;
+  static uint32_t s_last_sent_message_time = 0;
+  // 定期送信間隔 [ms]
+  constexpr uint32_t SendingPeriodicalInterval = 1000 * 60;
 
   // 電文を送信する必要があるか？
   bool needs_send = false;
 
   // まだ1度も送信したことがない？（起動直後に送信する）
-  needs_send = needs_send || (last_sent_message_time == 0);
+  needs_send = needs_send || (s_last_sent_message_time == 0);
   // 最後の送信から一定時間以上が経過している？（定期的に送信する）
-  needs_send = needs_send || (current_time - last_sent_message_time >= 1000 * 60);
+  needs_send = needs_send || (current_time - s_last_sent_message_time >= SendingPeriodicalInterval);
 
   if ( needs_send ) {
     updateIpAddress();
@@ -163,17 +167,21 @@ void handleDiscoveryMessage(const uint32_t current_time) {
     root.printTo(udp);
     udp.endPacket();
 
-    last_sent_message_time = current_time;
+    s_last_sent_message_time = current_time;
   }
 }
 
 void handleNotificationMessage(const uint32_t current_time) {
   // 最後に電文を送信した時刻 [ms]
-  static uint32_t last_sent_message_time = 0;
+  static uint32_t s_last_sent_message_time = 0;
   // 最後に送信した光センサ値
   static uint16_t last_light_sensor_value = 0;
   // 最後に送信した焦電センサ割り込み回数
   static uint32_t last_number_of_pyroelectric_sensor_interrupts = 0;
+  // 定期送信間隔 [ms]
+  constexpr uint32_t SendingPeriodicalInterval = 1000 * 10;
+  // 最小送信間隔 [ms]
+  constexpr uint32_t kSendingMinimumInterval = 1000 * 2;
 
   // 光センサ値を取得する
   const uint16_t light_sensor_value = analogRead(kLightSensorPin);
@@ -188,11 +196,11 @@ void handleNotificationMessage(const uint32_t current_time) {
   // 焦電センサ割り込み回数が変化している？
   needs_send = needs_send || (number_of_pyroelectric_sensor_interrupts != last_number_of_pyroelectric_sensor_interrupts);
   // まだ1度も送信したことがない？（起動直後に送信する）
-  needs_send = needs_send || (last_sent_message_time == 0);
+  needs_send = needs_send || (s_last_sent_message_time == 0);
   // 最後の送信から一定時間以上が経過している？（定期的に送信する）
-  needs_send = needs_send || (current_time - last_sent_message_time >= 1000 * 10);
+  needs_send = needs_send || (current_time - s_last_sent_message_time >= SendingPeriodicalInterval);
   // 最後の送信から一定時間以上が経過している？（頻繁に送信し過ぎないようにする）
-  needs_send = needs_send && (current_time - last_sent_message_time >= 1000 * 2);
+  needs_send = needs_send && (current_time - s_last_sent_message_time >= kSendingMinimumInterval);
 
   if ( needs_send ) {
     StaticJsonBuffer<256> json_buffer;
@@ -208,7 +216,7 @@ void handleNotificationMessage(const uint32_t current_time) {
     root.printTo(udp);
     udp.endPacket();
 
-    last_sent_message_time                        = current_time;
+    s_last_sent_message_time                      = current_time;
     last_light_sensor_value                       = light_sensor_value;
     last_number_of_pyroelectric_sensor_interrupts = number_of_pyroelectric_sensor_interrupts;
   }
