@@ -6,6 +6,13 @@
 
 #include "config.h"
 
+WiFiClient g_wifi_client;
+PubSubClient g_pub_sub_client(g_wifi_client);
+
+void callback(const char *topic, const byte *payload, const uint16_t length) {
+  Serial.print("callback");
+}
+
 void setup() {
   Serial.begin(115200);
 
@@ -20,7 +27,25 @@ void setup() {
     delay(5000);
     ESP.restart();
   }
+
+  Serial.println("Connected.");
+
+  Serial.print("WiFi.localIP: ");
+  Serial.println(WiFi.localIP());
+
+  g_pub_sub_client.setServer("192.168.1.35", 1883);
+  g_pub_sub_client.setCallback(callback);
 }
 
 void loop() {
+  g_pub_sub_client.loop();
+
+  const uint32_t current_time = millis();
+  static uint32_t last_time = 0;
+
+  if ( current_time - last_time >= 1000 ) {
+    g_pub_sub_client.publish("test", "hello");
+    Serial.println("publish");
+    last_time = current_time;
+  }
 }
