@@ -41,6 +41,9 @@ void setup() {
 }
 
 void loop() {
+  if ( !g_pub_sub_client.connected() ) {
+    g_pub_sub_client.connect("esp32");
+  }
   g_pub_sub_client.loop();
 
   const uint32_t current_time = millis();
