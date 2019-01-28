@@ -4,7 +4,10 @@
 
 #include <PubSubClient.h>
 
-#include "config.h"
+extern const char    *kWifiSsid;
+extern const char    *kWifiPassword;
+extern const char    *kMqttServerAddress;
+extern const uint16_t kMqttServerPort;
 
 WiFiClient g_wifi_client;
 PubSubClient g_pub_sub_client(g_wifi_client);
@@ -17,11 +20,11 @@ void setup() {
   Serial.begin(115200);
 
   Serial.print("Connecting to ");
-  Serial.print(WIFI_SSID);
+  Serial.print(kWifiSsid);
   Serial.println("...");
 
   WiFi.mode(WIFI_STA);
-  WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
+  WiFi.begin(kWifiSsid, kWifiPassword);
   while ( WiFi.waitForConnectResult() != WL_CONNECTED ) {
     Serial.println("Connection Failed! Rebooting...");
     delay(5000);
@@ -33,7 +36,7 @@ void setup() {
   Serial.print("WiFi.localIP: ");
   Serial.println(WiFi.localIP());
 
-  g_pub_sub_client.setServer("192.168.1.35", 1883);
+  g_pub_sub_client.setServer(kMqttServerAddress, kMqttServerPort);
   g_pub_sub_client.setCallback(callback);
 }
 
