@@ -2,7 +2,7 @@
 #include <Arduino.h>
 
 extern "C" {
-  int8_t temprature_sens_read();
+  uint8_t temprature_sens_read();
 }
 
 void setup() {
@@ -10,7 +10,7 @@ void setup() {
 }
 
 void loop() {
-  const int8_t temprature = temprature_sens_read();
+  const uint8_t temprature = temprature_sens_read();
   Serial.print("Temprature: ");
   Serial.println(temprature);
   delay(500);  // [ms]
