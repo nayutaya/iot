@@ -36,8 +36,6 @@ WiFiClient g_wifi_client;
 PubSubClient g_pub_sub_client(g_wifi_client);
 
 // TODO: 削除する。
-const IPAddress kMulticastAddress(224, 0, 0, 42);
-constexpr uint16_t kMulticastPortNotification = 11000;
 constexpr uint16_t kUnicastPortControl        = 12000;
 String g_ip_address;
 String g_host_name;
@@ -193,18 +191,11 @@ void handleNotificationMessage(const uint32_t current_time) {
   if ( needs_send ) {
     StaticJsonBuffer<256> json_buffer;
     JsonObject &root = json_buffer.createObject();
-    root["MessageType"]                          = "NOTIFICATION";
     root["IpAddress"]                            = g_ip_address;
     root["HostName"]                             = g_host_name;
     root["LocalTime"]                            = current_time;
     root["LightSensorValue"]                     = light_sensor_value;
     root["NumberOfPyroelectricSensorInterrupts"] = number_of_pyroelectric_sensor_interrupts;
-
-    // TODO: 削除する。
-    WiFiUDP udp;
-    udp.beginPacket(kMulticastAddress, kMulticastPortNotification);
-    root.printTo(udp);
-    udp.endPacket();
 
     char buffer[256] = {0};
     root.printTo(buffer);
