@@ -37,7 +37,6 @@ PubSubClient g_pub_sub_client(g_wifi_client);
 
 // TODO: 削除する。
 const IPAddress kMulticastAddress(224, 0, 0, 42);
-constexpr uint16_t kMulticastPortDiscovery    = 10000;
 constexpr uint16_t kMulticastPortNotification = 11000;
 constexpr uint16_t kUnicastPortControl        = 12000;
 String g_ip_address;
@@ -121,6 +120,13 @@ void setupOta() {
   });
   ArduinoOTA.begin();
 
+  g_ip_address = WiFi.localIP().toString();
+  g_host_name  = ArduinoOTA.getHostname() + ".local";
+  Serial.print("g_ip_address: ");
+  Serial.println(g_ip_address);
+  Serial.print("g_host_name: ");
+  Serial.println(g_host_name);
+
   setLedColor(RgbColor(0, 0, 0));
 }
 
@@ -133,11 +139,6 @@ void setupMqtt() {
   g_pub_sub_client.setServer(kMqttServerAddress, kMqttServerPort);
 }
 
-void updateIpAddress() {
-  g_ip_address = WiFi.localIP().toString();
-  g_host_name  = ArduinoOTA.getHostname() + ".local";
-}
-
 void setup() {
   setupIoPin();
   setupSerial();
@@ -145,12 +146,6 @@ void setup() {
   setupOta();
   setupUdpControlPort(); // TODO: 削除する。
   setupMqtt();
-
-  updateIpAddress();
-  Serial.print("g_ip_address: ");
-  Serial.println(g_ip_address);
-  Serial.print("g_host_name: ");
-  Serial.println(g_host_name);
 }
 
 void handleMqtt() {
@@ -159,41 +154,6 @@ void handleMqtt() {
     g_pub_sub_client.connect("esp32");
   }
   g_pub_sub_client.loop();
-}
-
-void handleDiscoveryMessage(const uint32_t current_time) {
-  // 最後に電文を送信した時刻 [ms]
-  static uint32_t s_last_sent_message_time = 0;
-  // 定期送信間隔 [ms]
-  constexpr uint32_t SendingPeriodicalInterval = 1000 * 60;
-
-  // 電文を送信する必要があるか？
-  bool needs_send = false;
-
-  // まだ1度も送信したことがない？（起動直後に送信する）
-  needs_send = needs_send || (s_last_sent_message_time == 0);
-  // 最後の送信から一定時間以上が経過している？（定期的に送信する）
-  needs_send = needs_send || (current_time - s_last_sent_message_time >= SendingPeriodicalInterval);
-
-  if ( needs_send ) {
-    updateIpAddress();
-
-    StaticJsonBuffer<256> json_buffer;
-    JsonObject &root = json_buffer.createObject();
-    root["MessageType"]         = "DISCOVERY";
-    root["HostName"]            = g_host_name;
-    root["NotificationPort"]    = kMulticastPortNotification;
-    root["NotificationAddress"] = kMulticastAddress.toString();
-    root["ControlPort"]         = kUnicastPortControl;
-    root["ControlAddress"]      = g_ip_address;
-
-    WiFiUDP udp;
-    udp.beginPacket(kMulticastAddress, kMulticastPortDiscovery);
-    root.printTo(udp);
-    udp.endPacket();
-
-    s_last_sent_message_time = current_time;
-  }
 }
 
 void handleNotificationMessage(const uint32_t current_time) {
@@ -234,6 +194,7 @@ void handleNotificationMessage(const uint32_t current_time) {
     StaticJsonBuffer<256> json_buffer;
     JsonObject &root = json_buffer.createObject();
     root["MessageType"]                          = "NOTIFICATION";
+    root["IpAddress"]                            = g_ip_address;
     root["HostName"]                             = g_host_name;
     root["LocalTime"]                            = current_time;
     root["LightSensorValue"]                     = light_sensor_value;
@@ -285,8 +246,6 @@ void loop() {
 
   const uint32_t current_time = millis();  // [ms]
 
-  // ディスカバリ電文を送信する（必要であれば）
-  handleDiscoveryMessage(current_time);
   // 通知電文を送信する（必要であれば）
   handleNotificationMessage(current_time);
   // 制御電文を処理する（必要であれば）
