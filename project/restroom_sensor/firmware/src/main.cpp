@@ -1,3 +1,7 @@
+// TODO: 設定値を`config.cpp`に保存するように変更する。
+// TODO: 状態をMQTT経由で送信する処理を追加する。
+// TODO: コマンドをMQTT経由で受信する処理を追加する。
+// TODO: UDPの処理を削除する。
 
 #include <Arduino.h>
 #include <WiFi.h>
