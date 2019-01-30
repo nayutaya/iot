@@ -14,6 +14,7 @@ extern const char    *kWifiPassword;
 extern const char    *kMqttServerAddress;
 extern const uint16_t kMqttServerPort;
 extern const char    *kMqttNotificationTopic;
+extern const char    *kMqttControlTopic;
 
 // 光センサのピン番号
 constexpr uint8_t kLightSensorPin = 33;  // ADC5
@@ -135,6 +136,14 @@ void setupUdpControlPort() {
 
 void setupMqtt() {
   g_pub_sub_client.setServer(kMqttServerAddress, kMqttServerPort);
+  g_pub_sub_client.setCallback([](const char *topic, const byte *payload, const uint32_t length) {
+    Serial.print("topic: ");
+    Serial.println(topic);
+    if ( String(topic).equals(kMqttControlTopic) ) {
+      Serial.print("length: ");
+      Serial.println(length);
+    }
+  });
 }
 
 void setup() {
@@ -148,7 +157,9 @@ void setup() {
 
 void handleMqtt() {
   if ( !g_pub_sub_client.connected() ) {
-    g_pub_sub_client.connect(g_host_name.c_str());
+    if ( g_pub_sub_client.connect(g_host_name.c_str()) ) {
+      g_pub_sub_client.subscribe(kMqttControlTopic);
+    }
   }
   g_pub_sub_client.loop();
 }
