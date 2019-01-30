@@ -8,9 +8,12 @@
 
 #include <NeoPixelBus.h>
 #include <ArduinoJson.h>
+#include <PubSubClient.h>
 
-extern const char *kWifiSsid;
-extern const char *kWifiPassword;
+extern const char    *kWifiSsid;
+extern const char    *kWifiPassword;
+extern const char    *kMqttServerAddress;
+extern const uint16_t kMqttServerPort;
 
 // 光センサのピン番号
 constexpr uint8_t kLightSensorPin = 33;  // ADC5
@@ -29,6 +32,10 @@ constexpr uint16_t kLedCount =  1;
 // LEDストリップ
 NeoPixelBus<NeoGrbFeature, Neo800KbpsMethod> g_led(kLedCount, kLedPin);
 
+WiFiClient g_wifi_client;
+PubSubClient g_pub_sub_client(g_wifi_client);
+
+// TODO: 削除する。
 const IPAddress kMulticastAddress(224, 0, 0, 42);
 constexpr uint16_t kMulticastPortDiscovery    = 10000;
 constexpr uint16_t kMulticastPortNotification = 11000;
@@ -117,8 +124,13 @@ void setupOta() {
   setLedColor(RgbColor(0, 0, 0));
 }
 
+// TODO: 削除する。
 void setupUdpControlPort() {
   g_udp_control.begin(kUnicastPortControl);
+}
+
+void setupMqtt() {
+  g_pub_sub_client.setServer(kMqttServerAddress, kMqttServerPort);
 }
 
 void updateIpAddress() {
@@ -131,13 +143,22 @@ void setup() {
   setupSerial();
   setupLed();
   setupOta();
-  setupUdpControlPort();
+  setupUdpControlPort(); // TODO: 削除する。
+  setupMqtt();
 
   updateIpAddress();
   Serial.print("g_ip_address: ");
   Serial.println(g_ip_address);
   Serial.print("g_host_name: ");
   Serial.println(g_host_name);
+}
+
+void handleMqtt() {
+  if ( !g_pub_sub_client.connected() ) {
+    // TODO: ホスト名からIDを生成する。
+    g_pub_sub_client.connect("esp32");
+  }
+  g_pub_sub_client.loop();
 }
 
 void handleDiscoveryMessage(const uint32_t current_time) {
@@ -253,6 +274,8 @@ void handleControlMessage() {
 
 void loop() {
   ArduinoOTA.handle();
+
+  handleMqtt();
 
   const uint32_t current_time = millis();  // [ms]
 
