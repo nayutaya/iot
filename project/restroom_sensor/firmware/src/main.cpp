@@ -142,6 +142,9 @@ void setupMqtt() {
     if ( String(topic).equals(kMqttControlTopic) ) {
       Serial.print("length: ");
       Serial.println(length);
+      const std::string body((const char*)payload, length);
+      Serial.print("body: ");
+      Serial.println(body.c_str());
     }
   });
 }
