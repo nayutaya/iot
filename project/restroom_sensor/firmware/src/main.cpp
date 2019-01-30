@@ -1,4 +1,3 @@
-// TODO: 状態をMQTT経由で送信する処理を追加する。
 // TODO: コマンドをMQTT経由で受信する処理を追加する。
 // TODO: UDPの処理を削除する。
 
@@ -14,6 +13,7 @@ extern const char    *kWifiSsid;
 extern const char    *kWifiPassword;
 extern const char    *kMqttServerAddress;
 extern const uint16_t kMqttServerPort;
+extern const char    *kMqttTopic;
 
 // 光センサのピン番号
 constexpr uint8_t kLightSensorPin = 33;  // ADC5
@@ -239,10 +239,16 @@ void handleNotificationMessage(const uint32_t current_time) {
     root["LightSensorValue"]                     = light_sensor_value;
     root["NumberOfPyroelectricSensorInterrupts"] = number_of_pyroelectric_sensor_interrupts;
 
+    // TODO: 削除する。
     WiFiUDP udp;
     udp.beginPacket(kMulticastAddress, kMulticastPortNotification);
     root.printTo(udp);
     udp.endPacket();
+
+    char buffer[256] = {0};
+    root.printTo(buffer);
+    Serial.println(buffer);
+    g_pub_sub_client.publish(kMqttTopic, buffer);
 
     s_last_sent_message_time                      = current_time;
     last_light_sensor_value                       = light_sensor_value;
