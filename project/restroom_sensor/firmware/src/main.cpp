@@ -137,33 +137,18 @@ void setupUdpControlPort() {
 void setupMqtt() {
   g_pub_sub_client.setServer(kMqttServerAddress, kMqttServerPort);
   g_pub_sub_client.setCallback([](const char *topic, const byte *payload, const uint32_t length) {
-    Serial.print("topic: ");
-    Serial.println(topic);
     if ( String(topic).equals(kMqttControlTopic) ) {
-      Serial.print("length: ");
-      Serial.println(length);
-      const std::string buffer((const char*)payload, length);
-      Serial.print("buffer: ");
-      Serial.println(buffer.c_str());
-
+      char buffer[256] = {};
+      memcpy(buffer, payload, length);
       StaticJsonBuffer<256> json_buffer;
-      const JsonObject &root = json_buffer.parseObject(buffer.c_str());
+      const JsonObject &root = json_buffer.parseObject(buffer);
       if ( root.success() ) {
         const String command = root["Command"].as<String>();
-Serial.print("command: ");
-Serial.println(command);
-
-        if ( command == "SET_LED" ) {
+        if ( command.equals("SET_LED") ) {
           const JsonObject &color = root["Color"];
           const uint8_t red   = color["Red"];
-Serial.print("red: ");
-Serial.println(red);
           const uint8_t green = color["Green"];
-Serial.print("green: ");
-Serial.println(green);
           const uint8_t blue  = color["Blue"];
-Serial.print("blue: ");
-Serial.println(blue);
           setLedColor(RgbColor(red, green, blue));
         }
       }
