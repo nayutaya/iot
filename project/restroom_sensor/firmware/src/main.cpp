@@ -35,12 +35,8 @@ NeoPixelBus<NeoGrbFeature, Neo800KbpsMethod> g_led(kLedCount, kLedPin);
 
 WiFiClient g_wifi_client;
 PubSubClient g_pub_sub_client(g_wifi_client);
-
-// TODO: 削除する。
-constexpr uint16_t kUnicastPortControl        = 12000;
 String g_ip_address;
 String g_host_name;
-WiFiUDP g_udp_control;
 
 void IRAM_ATTR handlePyroelectricSensorInterrupt() {
   // 現在時刻 [ms]
@@ -129,11 +125,6 @@ void setupOta() {
   setLedColor(RgbColor(0, 0, 0));
 }
 
-// TODO: 削除する。
-void setupUdpControlPort() {
-  g_udp_control.begin(kUnicastPortControl);
-}
-
 void setupMqtt() {
   g_pub_sub_client.setServer(kMqttServerAddress, kMqttServerPort);
   g_pub_sub_client.setCallback([](const char *topic, const byte *payload, const uint32_t length) {
@@ -161,8 +152,11 @@ void setup() {
   setupSerial();
   setupLed();
   setupOta();
-  setupUdpControlPort(); // TODO: 削除する。
   setupMqtt();
+}
+
+void handleOta() {
+  ArduinoOTA.handle();
 }
 
 void handleMqtt() {
@@ -174,7 +168,7 @@ void handleMqtt() {
   g_pub_sub_client.loop();
 }
 
-void handleNotificationMessage(const uint32_t current_time) {
+void handleNotificationMessage() {
   // 最後に電文を送信した時刻 [ms]
   static uint32_t s_last_sent_message_time = 0;
   // 最後に送信した光センサ値
@@ -194,6 +188,8 @@ void handleNotificationMessage(const uint32_t current_time) {
   const uint32_t number_of_pyroelectric_sensor_interrupts = g_number_of_pyroelectric_sensor_interrupts;
   portEXIT_CRITICAL(&g_pyroelectric_sensor_mutex);
 
+  // 現在時刻 [ms]
+  const uint32_t current_time = millis();
   // 電文を送信する必要があるか？
   bool needs_send = false;
 
@@ -228,39 +224,9 @@ void handleNotificationMessage(const uint32_t current_time) {
   }
 }
 
-void handleControlMessage() {
-  const int32_t size = g_udp_control.parsePacket();
-  if ( size > 0 ) {
-    char buffer[256] = {};
-    g_udp_control.read(buffer, sizeof(buffer));
-
-    StaticJsonBuffer<256> json_buffer;
-    const JsonObject &root = json_buffer.parseObject(buffer);
-    if ( root.success() ) {
-      const String command = root["Command"].as<String>();
-
-      if ( command == "SET_LED" ) {
-        const JsonObject &color = root["Color"];
-        const uint8_t red   = color["Red"];
-        const uint8_t green = color["Green"];
-        const uint8_t blue  = color["Blue"];
-        setLedColor(RgbColor(red, green, blue));
-      }
-    }
-  }
-}
-
 void loop() {
-  ArduinoOTA.handle();
-
+  handleOta();
   handleMqtt();
-
-  const uint32_t current_time = millis();  // [ms]
-
-  // 通知電文を送信する（必要であれば）
-  handleNotificationMessage(current_time);
-  // 制御電文を処理する（必要であれば）
-  handleControlMessage();
-
+  handleNotificationMessage();
   delay(100);  // [ms]
 }
