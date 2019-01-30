@@ -1,0 +1,5 @@
+
+#include <stdint.h>
+
+extern const char *kWifiSsid     = "SSID";
+extern const char *kWifiPassword = "PASSWORD";

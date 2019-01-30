@@ -1,4 +1,3 @@
-// TODO: 設定値を`config.cpp`に保存するように変更する。
 // TODO: 状態をMQTT経由で送信する処理を追加する。
 // TODO: コマンドをMQTT経由で受信する処理を追加する。
 // TODO: UDPの処理を削除する。
@@ -10,7 +9,8 @@
 #include <NeoPixelBus.h>
 #include <ArduinoJson.h>
 
-#include "wifi_config.h"
+extern const char *kWifiSsid;
+extern const char *kWifiPassword;
 
 // 光センサのピン番号
 constexpr uint8_t kLightSensorPin = 33;  // ADC5
@@ -80,11 +80,11 @@ void setLedColor(const RgbColor &color) {
 void setupOta() {
   setLedColor(RgbColor(255, 255, 255));
   Serial.print("Connecting to ");
-  Serial.print(WIFI_SSID);
+  Serial.print(kWifiSsid);
   Serial.println("...");
 
   WiFi.mode(WIFI_STA);
-  WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
+  WiFi.begin(kWifiSsid, kWifiPassword);
   while ( WiFi.waitForConnectResult() != WL_CONNECTED ) {
     setLedColor(RgbColor(255, 0, 0));
     Serial.println("Connection Failed! Rebooting...");
