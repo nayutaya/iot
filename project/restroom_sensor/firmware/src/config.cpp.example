@@ -4,6 +4,6 @@
 extern const char *kWifiSsid     = "SSID";
 extern const char *kWifiPassword = "PASSWORD";
 
-extern const char    *kMqttServerAddress = "XXX.XXX.XXX.XXX";
-extern const uint16_t kMqttServerPort    = 1883;
-extern const char    *kMqttTopic         = "sensor/restroom/raw/notification";
+extern const char    *kMqttServerAddress     = "XXX.XXX.XXX.XXX";
+extern const uint16_t kMqttServerPort        = 1883;
+extern const char    *kMqttNotificationTopic = "sensor/restroom/raw/notification";

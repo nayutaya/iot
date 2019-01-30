@@ -13,7 +13,7 @@ extern const char    *kWifiSsid;
 extern const char    *kWifiPassword;
 extern const char    *kMqttServerAddress;
 extern const uint16_t kMqttServerPort;
-extern const char    *kMqttTopic;
+extern const char    *kMqttNotificationTopic;
 
 // 光センサのピン番号
 constexpr uint8_t kLightSensorPin = 33;  // ADC5
@@ -148,8 +148,7 @@ void setup() {
 
 void handleMqtt() {
   if ( !g_pub_sub_client.connected() ) {
-    // TODO: ホスト名からIDを生成する。
-    g_pub_sub_client.connect("esp32");
+    g_pub_sub_client.connect(g_host_name.c_str());
   }
   g_pub_sub_client.loop();
 }
@@ -200,7 +199,7 @@ void handleNotificationMessage(const uint32_t current_time) {
     char buffer[256] = {0};
     root.printTo(buffer);
     Serial.println(buffer);
-    g_pub_sub_client.publish(kMqttTopic, buffer);
+    g_pub_sub_client.publish(kMqttNotificationTopic, buffer);
 
     s_last_sent_message_time                      = current_time;
     last_light_sensor_value                       = light_sensor_value;
