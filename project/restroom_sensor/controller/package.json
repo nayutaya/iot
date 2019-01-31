@@ -4,7 +4,8 @@
   "author": "Yuya Kato",
   "dependencies": {
     "mqtt": "^2.18.8",
-    "nodemon": "^1.18.9"
+    "nodemon": "^1.18.9",
+    "rxjs": "^6.4.0"
   },
   "license": "MIT",
   "main": "src/index.js",
