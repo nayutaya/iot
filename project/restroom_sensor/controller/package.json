@@ -3,6 +3,7 @@
   "version": "0.0.0",
   "author": "Yuya Kato",
   "dependencies": {
+    "mqtt": "^2.18.8",
     "nodemon": "^1.18.9"
   },
   "license": "MIT",
