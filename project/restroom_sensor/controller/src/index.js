@@ -15,8 +15,9 @@ const client = mqtt.connect("mqtt://127.0.0.1");
 const NOTIFICATION_TOPIC = "sensor/restroom/raw/notification";
 const CONTROL_TOPIC      = "sensor/restroom/raw/control";
 const LIGHT_SENSOR_THRESHOLD = 1024;
-const COLOR_BUSY = {Red: 255, Green: 0, Blue: 0};
-const COLOR_FREE = {Red: 0, Green: 255, Blue: 0};
+const COLOR_BUSY    = {Red: 255, Green: 0, Blue: 0};
+const COLOR_FREE    = {Red: 0, Green: 255, Blue: 0};
+const COLOR_UNKNOWN = {Red: 255, Green: 255, Blue: 0};
 
 client.on("connect", () => {
   console.log("[MQTT] connect");
@@ -71,7 +72,14 @@ const controlMessageStream = stateStream
     map((state) => {
       return {
         Command: "SET_LED",
-        Color: (state.IsLightOn ? COLOR_BUSY : COLOR_FREE),
+        Color:
+          (state.IsLightOn
+            ? (
+                   (state.LastLightTurnedOnTime + 1000 * 60 * 5 < state.CurrentTime)
+                && (state.LastDetectedHumanTime + 1000 * 60 * 5 < state.CurrentTime)
+                ? COLOR_UNKNOWN
+                : COLOR_BUSY)
+            : COLOR_FREE),
       };
     }),
   );
