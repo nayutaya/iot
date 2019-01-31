@@ -10,29 +10,31 @@ const CONTROL_TOPIC      = "sensor/restroom/raw/control";
 
 
 client.on("connect", () => {
-  console.log("connect");
+  console.log("[MQTT] connect");
 
   client.subscribe(NOTIFICATION_TOPIC, (err) => {
-    console.log("subscribe");
+    console.log("[MQTT] subscribe");
   });
-
-  setInterval(() => {
-    const data = {
-      Command: "SET_LED",
-      Color: {
-        Red:   Math.floor(Math.random() * 255),
-        Green: Math.floor(Math.random() * 255),
-        Blue:  Math.floor(Math.random() * 255),
-      },
-    };
-    const message = JSON.stringify(data);
-    client.publish(CONTROL_TOPIC, message);
-    console.log("publish:", message);
-  }, 1000);
 });
 
 client.on("message", (topic, message) => {
   if ( topic === NOTIFICATION_TOPIC ) {
-    console.log("message:", [topic, JSON.parse(message)]);
+    const notificationMessage = JSON.parse(message);
+    console.log("[MQTT] notificationMessage:", notificationMessage);
+
+    // TODO: 閾値を定数化する。
+    var color;
+    if ( notificationMessage.LightSensorValue >= 1024 ) {
+      color = {Red: 255, Green: 0, Blue: 0};
+    } else {
+      color = {Red: 0, Green: 255, Blue: 0};
+    }
+
+    const controlMessage = JSON.stringify({
+      Command: "SET_LED",
+      Color: color,
+    });
+    client.publish(CONTROL_TOPIC, controlMessage);
+    console.log("[MQTT] controlMessage:", controlMessage);
   }
 });
