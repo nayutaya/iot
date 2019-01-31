@@ -1,5 +1,3 @@
-// TODO: コマンドをMQTT経由で受信する処理を追加する。
-// TODO: UDPの処理を削除する。
 
 #include <Arduino.h>
 #include <WiFi.h>
