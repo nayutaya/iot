@@ -5,8 +5,14 @@
 
 #include <NeoPixelBus.h>
 #include <ArduinoJson.h>
+#include <PubSubClient.h>
 
-#include "wifi_config.h"
+extern const char    *kWifiSsid;
+extern const char    *kWifiPassword;
+extern const char    *kMqttServerAddress;
+extern const uint16_t kMqttServerPort;
+extern const char    *kMqttNotificationTopic;
+extern const char    *kMqttControlTopic;
 
 // 光センサのピン番号
 constexpr uint8_t kLightSensorPin = 33;  // ADC5
@@ -25,13 +31,10 @@ constexpr uint16_t kLedCount =  1;
 // LEDストリップ
 NeoPixelBus<NeoGrbFeature, Neo800KbpsMethod> g_led(kLedCount, kLedPin);
 
-const IPAddress kMulticastAddress(224, 0, 0, 42);
-constexpr uint16_t kMulticastPortDiscovery    = 10000;
-constexpr uint16_t kMulticastPortNotification = 11000;
-constexpr uint16_t kUnicastPortControl        = 12000;
+WiFiClient g_wifi_client;
+PubSubClient g_pub_sub_client(g_wifi_client);
 String g_ip_address;
 String g_host_name;
-WiFiUDP g_udp_control;
 
 void IRAM_ATTR handlePyroelectricSensorInterrupt() {
   // 現在時刻 [ms]
@@ -76,11 +79,11 @@ void setLedColor(const RgbColor &color) {
 void setupOta() {
   setLedColor(RgbColor(255, 255, 255));
   Serial.print("Connecting to ");
-  Serial.print(WIFI_SSID);
+  Serial.print(kWifiSsid);
   Serial.println("...");
 
   WiFi.mode(WIFI_STA);
-  WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
+  WiFi.begin(kWifiSsid, kWifiPassword);
   while ( WiFi.waitForConnectResult() != WL_CONNECTED ) {
     setLedColor(RgbColor(255, 0, 0));
     Serial.println("Connection Failed! Rebooting...");
@@ -110,16 +113,36 @@ void setupOta() {
   });
   ArduinoOTA.begin();
 
+  g_ip_address = WiFi.localIP().toString();
+  g_host_name  = ArduinoOTA.getHostname() + ".local";
+  Serial.print("g_ip_address: ");
+  Serial.println(g_ip_address);
+  Serial.print("g_host_name: ");
+  Serial.println(g_host_name);
+
   setLedColor(RgbColor(0, 0, 0));
 }
 
-void setupUdpControlPort() {
-  g_udp_control.begin(kUnicastPortControl);
-}
-
-void updateIpAddress() {
-  g_ip_address = WiFi.localIP().toString();
-  g_host_name  = ArduinoOTA.getHostname() + ".local";
+void setupMqtt() {
+  g_pub_sub_client.setServer(kMqttServerAddress, kMqttServerPort);
+  g_pub_sub_client.setCallback([](const char *topic, const byte *payload, const uint32_t length) {
+    if ( String(topic).equals(kMqttControlTopic) ) {
+      char buffer[256] = {};
+      memcpy(buffer, payload, length);
+      StaticJsonBuffer<256> json_buffer;
+      const JsonObject &root = json_buffer.parseObject(buffer);
+      if ( root.success() ) {
+        const String command = root["Command"].as<String>();
+        if ( command.equals("SET_LED") ) {
+          const JsonObject &color = root["Color"];
+          const uint8_t red   = color["Red"];
+          const uint8_t green = color["Green"];
+          const uint8_t blue  = color["Blue"];
+          setLedColor(RgbColor(red, green, blue));
+        }
+      }
+    }
+  });
 }
 
 void setup() {
@@ -127,51 +150,23 @@ void setup() {
   setupSerial();
   setupLed();
   setupOta();
-  setupUdpControlPort();
-
-  updateIpAddress();
-  Serial.print("g_ip_address: ");
-  Serial.println(g_ip_address);
-  Serial.print("g_host_name: ");
-  Serial.println(g_host_name);
+  setupMqtt();
 }
 
-void handleDiscoveryMessage(const uint32_t current_time) {
-  // 最後に電文を送信した時刻 [ms]
-  static uint32_t s_last_sent_message_time = 0;
-  // 定期送信間隔 [ms]
-  constexpr uint32_t SendingPeriodicalInterval = 1000 * 60;
+void handleOta() {
+  ArduinoOTA.handle();
+}
 
-  // 電文を送信する必要があるか？
-  bool needs_send = false;
-
-  // まだ1度も送信したことがない？（起動直後に送信する）
-  needs_send = needs_send || (s_last_sent_message_time == 0);
-  // 最後の送信から一定時間以上が経過している？（定期的に送信する）
-  needs_send = needs_send || (current_time - s_last_sent_message_time >= SendingPeriodicalInterval);
-
-  if ( needs_send ) {
-    updateIpAddress();
-
-    StaticJsonBuffer<256> json_buffer;
-    JsonObject &root = json_buffer.createObject();
-    root["MessageType"]         = "DISCOVERY";
-    root["HostName"]            = g_host_name;
-    root["NotificationPort"]    = kMulticastPortNotification;
-    root["NotificationAddress"] = kMulticastAddress.toString();
-    root["ControlPort"]         = kUnicastPortControl;
-    root["ControlAddress"]      = g_ip_address;
-
-    WiFiUDP udp;
-    udp.beginPacket(kMulticastAddress, kMulticastPortDiscovery);
-    root.printTo(udp);
-    udp.endPacket();
-
-    s_last_sent_message_time = current_time;
+void handleMqtt() {
+  if ( !g_pub_sub_client.connected() ) {
+    if ( g_pub_sub_client.connect(g_host_name.c_str()) ) {
+      g_pub_sub_client.subscribe(kMqttControlTopic);
+    }
   }
+  g_pub_sub_client.loop();
 }
 
-void handleNotificationMessage(const uint32_t current_time) {
+void handleNotificationMessage() {
   // 最後に電文を送信した時刻 [ms]
   static uint32_t s_last_sent_message_time = 0;
   // 最後に送信した光センサ値
@@ -191,6 +186,8 @@ void handleNotificationMessage(const uint32_t current_time) {
   const uint32_t number_of_pyroelectric_sensor_interrupts = g_number_of_pyroelectric_sensor_interrupts;
   portEXIT_CRITICAL(&g_pyroelectric_sensor_mutex);
 
+  // 現在時刻 [ms]
+  const uint32_t current_time = millis();
   // 電文を送信する必要があるか？
   bool needs_send = false;
 
@@ -208,16 +205,16 @@ void handleNotificationMessage(const uint32_t current_time) {
   if ( needs_send ) {
     StaticJsonBuffer<256> json_buffer;
     JsonObject &root = json_buffer.createObject();
-    root["MessageType"]                          = "NOTIFICATION";
+    root["IpAddress"]                            = g_ip_address;
     root["HostName"]                             = g_host_name;
     root["LocalTime"]                            = current_time;
     root["LightSensorValue"]                     = light_sensor_value;
     root["NumberOfPyroelectricSensorInterrupts"] = number_of_pyroelectric_sensor_interrupts;
 
-    WiFiUDP udp;
-    udp.beginPacket(kMulticastAddress, kMulticastPortNotification);
-    root.printTo(udp);
-    udp.endPacket();
+    char buffer[256] = {0};
+    root.printTo(buffer);
+    Serial.println(buffer);
+    g_pub_sub_client.publish(kMqttNotificationTopic, buffer);
 
     s_last_sent_message_time                      = current_time;
     last_light_sensor_value                       = light_sensor_value;
@@ -225,39 +222,9 @@ void handleNotificationMessage(const uint32_t current_time) {
   }
 }
 
-void handleControlMessage() {
-  const int32_t size = g_udp_control.parsePacket();
-  if ( size > 0 ) {
-    char buffer[256] = {};
-    g_udp_control.read(buffer, sizeof(buffer));
-
-    StaticJsonBuffer<256> json_buffer;
-    const JsonObject &root = json_buffer.parseObject(buffer);
-    if ( root.success() ) {
-      const String command = root["Command"].as<String>();
-
-      if ( command == "SET_LED" ) {
-        const JsonObject &color = root["Color"];
-        const uint8_t red   = color["Red"];
-        const uint8_t green = color["Green"];
-        const uint8_t blue  = color["Blue"];
-        setLedColor(RgbColor(red, green, blue));
-      }
-    }
-  }
-}
-
 void loop() {
-  ArduinoOTA.handle();
-
-  const uint32_t current_time = millis();  // [ms]
-
-  // ディスカバリ電文を送信する（必要であれば）
-  handleDiscoveryMessage(current_time);
-  // 通知電文を送信する（必要であれば）
-  handleNotificationMessage(current_time);
-  // 制御電文を処理する（必要であれば）
-  handleControlMessage();
-
+  handleOta();
+  handleMqtt();
+  handleNotificationMessage();
   delay(100);  // [ms]
 }
