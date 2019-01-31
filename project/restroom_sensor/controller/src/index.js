@@ -5,6 +5,7 @@ const mqtt = require("mqtt");
 const Rx = require("rxjs");
 const {
   filter,
+  map,
   scan,
 } = require("rxjs/operators");
 
@@ -28,9 +29,7 @@ client.on("connect", () => {
 const notificationMessageSubject = new Rx.BehaviorSubject(null);
 client.on("message", (topic, message) => {
   if ( topic === NOTIFICATION_TOPIC ) {
-    const notificationMessage = JSON.parse(message);
-    console.log("[MQTT] notificationMessage:", notificationMessage);
-    notificationMessageSubject.next(notificationMessage);
+    notificationMessageSubject.next(JSON.parse(message));
   }
 });
 
@@ -45,11 +44,11 @@ const initialState = {
 };
 const stateStream = notificationMessageSubject
   .pipe(
-    filter((message) => message !== null),
-    scan((previousState, message) => {
+    filter((notificationMessage) => notificationMessage !== null),
+    scan((previousState, notificationMessage) => {
       const currentState = Object.assign({}, previousState);
-      currentState.LightSensorValue                     = message.LightSensorValue;
-      currentState.NumberOfPyroelectricSensorInterrupts = message.NumberOfPyroelectricSensorInterrupts;
+      currentState.LightSensorValue                     = notificationMessage.LightSensorValue;
+      currentState.NumberOfPyroelectricSensorInterrupts = notificationMessage.NumberOfPyroelectricSensorInterrupts;
       currentState.CurrentTime                          = new Date().getTime();
       currentState.IsLightOn                            = (currentState.LightSensorValue >= LIGHT_SENSOR_THRESHOLD);
 
@@ -67,15 +66,27 @@ const stateStream = notificationMessageSubject
     }, initialState),
   );
 
-stateStream.subscribe((state) => {
-  console.log("[Rx] stateStream:", state);
+const controlMessageStream = stateStream
+  .pipe(
+    map((state) => {
+      return {
+        Command: "SET_LED",
+        Color: (state.IsLightOn ? COLOR_BUSY : COLOR_FREE),
+      };
+    }),
+  );
+controlMessageStream.subscribe((controlMessage) => {
+  client.publish(CONTROL_TOPIC, JSON.stringify(controlMessage));
+});
+
+notificationMessageSubject.subscribe((notificationMessage) => {
+  console.log("[Rx] notificationMessage:", notificationMessage);
 });
 
 stateStream.subscribe((state) => {
-  const controlMessage = JSON.stringify({
-    Command: "SET_LED",
-    Color: (state.IsLightOn ? COLOR_BUSY : COLOR_FREE),
-  });
-  console.log("[MQTT] controlMessage:", controlMessage);
-  client.publish(CONTROL_TOPIC, controlMessage);
+  console.log("[Rx] state:", state);
+});
+
+controlMessageStream.subscribe((controlMessage) => {
+  console.log("[Rx] controlMessage:", controlMessage);
 });
