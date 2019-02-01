@@ -1,0 +1,16 @@
+{
+  "name": "controller",
+  "version": "1.0.0",
+  "author": "Yuya Kato",
+  "dependencies": {
+    "mqtt": "^2.18.8",
+    "nodemon": "^1.18.9",
+    "rxjs": "^6.4.0"
+  },
+  "license": "MIT",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "nodemon src/index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  }
+}
