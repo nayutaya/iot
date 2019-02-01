@@ -14,6 +14,7 @@ console.log("MQTT_SERVER_URL:", MQTT_SERVER_URL);
 
 const NOTIFICATION_TOPIC = "sensor/restroom/raw/notification";
 const CONTROL_TOPIC      = "sensor/restroom/raw/control";
+const STATE_TOPIC        = "sensor/restroom/state";
 const LIGHT_SENSOR_THRESHOLD = 512;
 const COLOR_MAP = {
   BUSY:    {Red: 255, Green: 0, Blue: 0},
@@ -80,6 +81,9 @@ const stateStream = notificationMessageSubject
       return currentState;
     }, initialState),
   );
+stateStream.subscribe((state) => {
+  client.publish(STATE_TOPIC, JSON.stringify(state));
+});
 
 const controlMessageStream = stateStream
   .pipe(
