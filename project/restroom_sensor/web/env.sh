@@ -1,0 +1,2 @@
+IMAGE_NAME=iot/project/restroom_sensor/web
+CONTAINER_NAME=iot_project_restroom_sensor_web
