@@ -1,1 +1,2 @@
 IMAGE_NAME=iot/service/mosquitto
+CONTAINER_NAME=iot_service_mosquitto
