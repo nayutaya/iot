@@ -15,9 +15,11 @@ console.log("MQTT_SERVER_URL:", MQTT_SERVER_URL);
 const NOTIFICATION_TOPIC = "sensor/restroom/raw/notification";
 const CONTROL_TOPIC      = "sensor/restroom/raw/control";
 const LIGHT_SENSOR_THRESHOLD = 1024;
-const COLOR_BUSY    = {Red: 255, Green: 0, Blue: 0};
-const COLOR_FREE    = {Red: 0, Green: 255, Blue: 0};
-const COLOR_UNKNOWN = {Red: 255, Green: 255, Blue: 0};
+const COLOR_MAP = {
+  BUSY:    {Red: 255, Green: 0, Blue: 0},
+  FREE:    {Red: 0, Green: 255, Blue: 0},
+  UNKNOWN: {Red: 255, Green: 255, Blue: 0},
+}
 
 const client = mqtt.connect(MQTT_SERVER_URL);
 
@@ -44,6 +46,7 @@ const initialState = {
   LastLightTurnedOnTime: 0,
   LastLightTurnedOffTime: 0,
   LastDetectedHumanTime: 0,
+  State: "UNKNOWN",
 };
 const stateStream = notificationMessageSubject
   .pipe(
@@ -65,6 +68,15 @@ const stateStream = notificationMessageSubject
         currentState.LastDetectedHumanTime = currentState.CurrentTime;
       }
 
+      currentState.State =
+        (currentState.IsLightOn
+          ? (
+                 (currentState.LastLightTurnedOnTime + 1000 * 60 * 5 < currentState.CurrentTime)
+              && (currentState.LastDetectedHumanTime + 1000 * 60 * 5 < currentState.CurrentTime)
+              ? "UNKNOWN"
+              : "BUSY")
+          : "FREE");
+
       return currentState;
     }, initialState),
   );
@@ -74,14 +86,7 @@ const controlMessageStream = stateStream
     map((state) => {
       return {
         Command: "SET_LED",
-        Color:
-          (state.IsLightOn
-            ? (
-                   (state.LastLightTurnedOnTime + 1000 * 60 * 5 < state.CurrentTime)
-                && (state.LastDetectedHumanTime + 1000 * 60 * 5 < state.CurrentTime)
-                ? COLOR_UNKNOWN
-                : COLOR_BUSY)
-            : COLOR_FREE),
+        Color: COLOR_MAP[state.State],
       };
     }),
   );
