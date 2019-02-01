@@ -1,6 +1,6 @@
 {
   "name": "controller",
-  "version": "0.0.0",
+  "version": "1.0.0",
   "author": "Yuya Kato",
   "dependencies": {
     "mqtt": "^2.18.8",
