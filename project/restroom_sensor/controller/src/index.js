@@ -9,8 +9,8 @@ const {
   scan,
 } = require("rxjs/operators");
 
-// TODO: MQTTサーバのアドレスを環境変数から取得する。
-const client = mqtt.connect("mqtt://127.0.0.1");
+const MQTT_SERVER_URL = process.env.MQTT_SERVER_URL;
+console.log("MQTT_SERVER_URL:", MQTT_SERVER_URL);
 
 const NOTIFICATION_TOPIC = "sensor/restroom/raw/notification";
 const CONTROL_TOPIC      = "sensor/restroom/raw/control";
@@ -18,6 +18,8 @@ const LIGHT_SENSOR_THRESHOLD = 1024;
 const COLOR_BUSY    = {Red: 255, Green: 0, Blue: 0};
 const COLOR_FREE    = {Red: 0, Green: 255, Blue: 0};
 const COLOR_UNKNOWN = {Red: 255, Green: 255, Blue: 0};
+
+const client = mqtt.connect(MQTT_SERVER_URL);
 
 client.on("connect", () => {
   console.log("[MQTT] connect");
