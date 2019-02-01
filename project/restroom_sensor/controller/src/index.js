@@ -14,7 +14,7 @@ console.log("MQTT_SERVER_URL:", MQTT_SERVER_URL);
 
 const NOTIFICATION_TOPIC = "sensor/restroom/raw/notification";
 const CONTROL_TOPIC      = "sensor/restroom/raw/control";
-const LIGHT_SENSOR_THRESHOLD = 1024;
+const LIGHT_SENSOR_THRESHOLD = 512;
 const COLOR_MAP = {
   BUSY:    {Red: 255, Green: 0, Blue: 0},
   FREE:    {Red: 0, Green: 255, Blue: 0},
