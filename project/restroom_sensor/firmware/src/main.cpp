@@ -42,7 +42,7 @@ void IRAM_ATTR handlePyroelectricSensorInterrupt() {
   // 焦電センサの立ち下がりが発生した最終時刻 [ms]
   static volatile uint32_t s_last_handled_time = 0;
   // 焦電センサの立ち下がりの処理間隔 [ms]
-  constexpr uint32_t kHandlingInterval = 1000 * 10;
+  constexpr uint32_t kHandlingInterval = 1000 * 5;
 
   if ( current_time - s_last_handled_time > kHandlingInterval ) {
     portENTER_CRITICAL_ISR(&g_pyroelectric_sensor_mutex);
@@ -176,7 +176,7 @@ void handleNotificationMessage() {
   // 定期送信間隔 [ms]
   constexpr uint32_t SendingPeriodicalInterval = 1000 * 10;
   // 最小送信間隔 [ms]
-  constexpr uint32_t kSendingMinimumInterval = 1000 * 2;
+  constexpr uint32_t kSendingMinimumInterval = 1000 * 1;
 
   // 光センサ値を取得する
   const uint16_t light_sensor_value = analogRead(kLightSensorPin);
@@ -192,7 +192,7 @@ void handleNotificationMessage() {
   bool needs_send = false;
 
   // 光センサ値が閾値を超えて変化している？
-  needs_send = needs_send || (abs((int32_t)light_sensor_value - (int32_t)last_light_sensor_value) > (int32_t)2048);
+  needs_send = needs_send || (abs((int32_t)light_sensor_value - (int32_t)last_light_sensor_value) >= (int32_t)512);
   // 焦電センサ割り込み回数が変化している？
   needs_send = needs_send || (number_of_pyroelectric_sensor_interrupts != last_number_of_pyroelectric_sensor_interrupts);
   // まだ1度も送信したことがない？（起動直後に送信する）
