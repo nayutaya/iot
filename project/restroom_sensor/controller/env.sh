@@ -1,1 +1,2 @@
 IMAGE_NAME=iot/project/restroom_sensor/controller
+CONTAINER_NAME=iot_project_restroom_sensor_controller
