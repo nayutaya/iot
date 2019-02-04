@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 
+const _       = require("lodash");
 const express = require("express");
 const Rx      = require("rxjs");
 const {
@@ -22,11 +23,14 @@ const stateHistoryStream = stateSubject
   .pipe(
     filter((notificationMessage) => notificationMessage !== null),
     scan((stateHistory, state) => {
-      const newStateHistory = [].concat(stateHistory);
-      newStateHistory.push(state);
-      // TODO: レコード数を制限する。
       // TODO: レコードの期間を制限する。
-      return newStateHistory;
+      return _(stateHistory)
+        .concat([state])
+        .sortBy((s) => s.CurrentTime)
+        .reverse()
+        .slice(0, 100)
+        .reverse()
+        .value();
     }),
   )
 
