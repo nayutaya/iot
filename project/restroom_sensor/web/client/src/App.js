@@ -2,7 +2,7 @@ import React, { Component } from "react";
 import "./App.css";
 
 import _ from "lodash";
-import Websocket from "react-websocket";
+import WebSocket from "react-websocket";
 
 export default class App extends Component {
   constructor(props) {
@@ -26,7 +26,7 @@ export default class App extends Component {
           .concat(JSON.parse(data))
           .sortBy((s) => s.CurrentTime)
           .reverse()
-          .slice(0, 100)
+          .slice(0, 10)
           .reverse()
           .value();
     // console.log("stateHistory:", stateHistory);
@@ -37,7 +37,25 @@ export default class App extends Component {
     return (
       <div className="App">
         App
-        <Websocket url="ws://localhost:8080/" onMessage={(data) => this.onMessage(data)}/>
+        <WebSocket url="ws://localhost:8080/" onMessage={(data) => this.onMessage(data)}/>
+        <table>
+          <thead>
+            <tr>
+              <th>CurrentTime</th>
+              <th>State</th>
+            </tr>
+          </thead>
+          <tbody>
+            {this.state.stateHistory.map((state) => {
+              return (
+                <tr key={state.CurrentTime}>
+                  <td>{state.CurrentTime}</td>
+                  <td>{state.State}</td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
       </div>
     );
   }
