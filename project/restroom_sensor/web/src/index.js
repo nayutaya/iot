@@ -55,6 +55,13 @@ app.get("/state.json", (req, res, next) => {
   });
 });
 
+app.get("/state/history.json", (req, res, next) => {
+  res.json({
+    Time: new Date().getTime(),
+    StateHistory: stateHistorySubject.value,
+  });
+});
+
 const server = app.listen(8080, () => {
   console.log("[Web] http://127.0.0.1:" + server.address().port + "/");
 });
