@@ -9,6 +9,7 @@ export default class App extends Component {
     super(props);
     this.state = {
       stateHistory: [],
+      currentState: null,
     };
   }
 
@@ -27,10 +28,10 @@ export default class App extends Component {
           .sortBy((s) => s.CurrentTime)
           .reverse()
           .slice(0, 10)
-          .reverse()
           .value();
     // console.log("stateHistory:", stateHistory);
-    this.setState({stateHistory});
+    const currentState = stateHistory[0];
+    this.setState({stateHistory, currentState});
   }
 
   render() {
@@ -38,6 +39,12 @@ export default class App extends Component {
       <div className="App">
         App
         <WebSocket url="ws://localhost:8080/" onMessage={(data) => this.onMessage(data)}/>
+        {(this.state.currentState == null ? null :
+          <>
+            <div>CurrentTime: {this.state.currentState.CurrentTime}</div>
+            <div>State: {this.state.currentState.State}</div>
+          </>
+        )}
         <table>
           <thead>
             <tr>
