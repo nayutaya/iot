@@ -1,13 +1,6 @@
 #!/usr/bin/env node
 
-const _       = require("lodash");
 const express = require("express");
-const Rx      = require("rxjs");
-const {
-  filter,
-  // map,
-  scan,
-} = require("rxjs/operators");
 
 const MQTT_SERVER_URL = process.env.MQTT_SERVER_URL;
 const STATE_TOPIC     = "sensor/restroom/state";
@@ -19,24 +12,7 @@ const {mqttClient, stateSubject} = require("./mqtt")({
   stateTopic: STATE_TOPIC,
 });
 
-const stateHistorySubject = new Rx.BehaviorSubject([]);
-stateSubject
-  .pipe(
-    filter((notificationMessage) => notificationMessage !== null),
-    scan((stateHistory, state) => {
-      // TODO: レコードの期間を制限する。
-      return _(stateHistory)
-        .concat([state])
-        .sortBy((s) => s.CurrentTime)
-        .reverse()
-        .slice(0, 100)
-        .reverse()
-        .value();
-    }, []),
-  )
-  .subscribe((stateHistory) => {
-    stateHistorySubject.next(stateHistory);
-  });
+const {stateHistorySubject} = require("./controller")({stateSubject})
 
 stateSubject.subscribe((state) => {
   console.log("[Rx] state:", state);
