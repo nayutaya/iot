@@ -47,7 +47,7 @@ stateHistorySubject.subscribe((stateHistory) => {
 });
 
 const app = express();
-require("express-ws")(app);
+const expressWs = require("express-ws")(app);
 
 app.get("/state.json", (req, res, next) => {
   res.json({
@@ -63,12 +63,18 @@ app.get("/state/history.json", (req, res, next) => {
   });
 });
 
-app.ws("/echo", (ws, req) => {
+app.ws("/", (ws, req) => {
   ws.on("message", (msg) => {
-    ws.send(msg);
+    // nop
   });
 
   ws.send(JSON.stringify(stateHistorySubject.value));
+});
+
+stateSubject.subscribe((state) => {
+  expressWs.getWss().clients.forEach((client) => {
+    client.send(JSON.stringify([state]));
+  });
 });
 
 const WEB_API_HOST = "0.0.0.0";
