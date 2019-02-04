@@ -1,9 +1,12 @@
 
 const express = require("express");
+const cors    = require("cors");
 
 module.exports = ({webApiHost, webApiPort, stateSubject, stateHistorySubject}) => {
   const app = express();
   const expressWs = require("express-ws")(app);
+
+  app.use(cors());
 
   app.get("/state.json", (req, res, next) => {
     res.json({

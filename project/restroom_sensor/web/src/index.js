@@ -1,6 +1,5 @@
 #!/usr/bin/env node
 
-
 const MQTT_SERVER_URL  = process.env.MQTT_SERVER_URL;
 const MQTT_STATE_TOPIC = "sensor/restroom/state";
 const WEB_API_HOST     = "0.0.0.0";
