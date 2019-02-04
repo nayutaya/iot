@@ -2,14 +2,14 @@
 
 const express = require("express");
 
-const MQTT_SERVER_URL = process.env.MQTT_SERVER_URL;
-const STATE_TOPIC     = "sensor/restroom/state";
+const MQTT_SERVER_URL  = process.env.MQTT_SERVER_URL;
+const MQTT_STATE_TOPIC = "sensor/restroom/state";
 console.log("MQTT_SERVER_URL:", MQTT_SERVER_URL);
-console.log("STATE_TOPIC:", STATE_TOPIC);
+console.log("MQTT_STATE_TOPIC:", MQTT_STATE_TOPIC);
 
 const {mqttClient, stateSubject} = require("./mqtt")({
   mqttServerUrl: MQTT_SERVER_URL,
-  stateTopic: STATE_TOPIC,
+  stateTopic: MQTT_STATE_TOPIC,
 });
 
 const {stateHistorySubject} = require("./controller")({stateSubject})
