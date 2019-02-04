@@ -32,7 +32,7 @@ stateSubject
         .slice(0, 100)
         .reverse()
         .value();
-    }),
+    }, []),
   )
   .subscribe((stateHistory) => {
     stateHistorySubject.next(stateHistory);
@@ -43,10 +43,11 @@ stateSubject.subscribe((state) => {
 });
 
 stateHistorySubject.subscribe((stateHistory) => {
-  console.log("[Rx] stateHistory:", stateHistory);
+  // console.log("[Rx] stateHistory:", stateHistory);
 });
 
 const app = express();
+require("express-ws")(app);
 
 app.get("/state.json", (req, res, next) => {
   res.json({
@@ -62,6 +63,16 @@ app.get("/state/history.json", (req, res, next) => {
   });
 });
 
-const server = app.listen(8080, () => {
-  console.log("[Web] http://127.0.0.1:" + server.address().port + "/");
+app.ws("/echo", (ws, req) => {
+  ws.on("message", (msg) => {
+    ws.send(msg);
+  });
+
+  ws.send(JSON.stringify(stateHistorySubject.value));
+});
+
+const WEB_API_HOST = "0.0.0.0";
+const WEB_API_PORT = 8080;
+const server = app.listen(WEB_API_PORT, WEB_API_HOST, () => {
+  console.log("[Web] http://" + server.address().address + ":" + server.address().port + "/");
 });

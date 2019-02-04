@@ -3,8 +3,6 @@ const mqtt = require("mqtt");
 const Rx   = require("rxjs");
 
 module.exports = ({mqttServerUrl, stateTopic}) => {
-  console.log("mqtt");
-
   const mqttClient   = mqtt.connect(mqttServerUrl);
   const stateSubject = new Rx.BehaviorSubject(null);
 
