@@ -19,7 +19,8 @@ const {mqttClient, stateSubject} = require("./mqtt")({
   stateTopic: STATE_TOPIC,
 });
 
-const stateHistoryStream = stateSubject
+const stateHistorySubject = new Rx.BehaviorSubject([]);
+stateSubject
   .pipe(
     filter((notificationMessage) => notificationMessage !== null),
     scan((stateHistory, state) => {
@@ -33,12 +34,15 @@ const stateHistoryStream = stateSubject
         .value();
     }),
   )
+  .subscribe((stateHistory) => {
+    stateHistorySubject.next(stateHistory);
+  });
 
 stateSubject.subscribe((state) => {
   console.log("[Rx] state:", state);
 });
 
-stateHistoryStream.subscribe((stateHistory) => {
+stateHistorySubject.subscribe((stateHistory) => {
   console.log("[Rx] stateHistory:", stateHistory);
 });
 
