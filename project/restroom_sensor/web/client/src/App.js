@@ -4,7 +4,8 @@ import "./App.css";
 import _ from "lodash";
 import WebSocket from "react-websocket";
 
-import Button from "@material-ui/core/Button";
+import CssBaseline from "@material-ui/core/CssBaseline";
+import Grid from "@material-ui/core/Grid";
 
 export default class App extends Component {
   constructor(props) {
@@ -39,36 +40,38 @@ export default class App extends Component {
   render() {
     return (
       <div className="App">
-        App
         <WebSocket url="ws://localhost:8080/" onMessage={(data) => this.onMessage(data)}/>
-        {(this.state.currentState == null ? null :
-          <>
-            <div>CurrentTime: {this.state.currentState.CurrentTime}</div>
-            <div>State: {this.state.currentState.State}</div>
-          </>
-        )}
-        <table>
-          <thead>
-            <tr>
-              <th>CurrentTime</th>
-              <th>State</th>
-            </tr>
-          </thead>
-          <tbody>
-            {this.state.stateHistory.map((state) => {
-              return (
-                <tr key={state.CurrentTime}>
-                  <td>{state.CurrentTime}</td>
-                  <td>{state.State}</td>
+        <CssBaseline />
+        <Grid container spacing={16}>
+          <Grid item xs={6}>
+            {(this.state.currentState == null ? null :
+              <>
+                <div>CurrentTime: {this.state.currentState.CurrentTime}</div>
+                <div>State: {this.state.currentState.State}</div>
+              </>
+            )}
+          </Grid>
+          <Grid item xs={6}>
+            <table>
+              <thead>
+                <tr>
+                  <th>CurrentTime</th>
+                  <th>State</th>
                 </tr>
-              );
-            })}
-          </tbody>
-        </table>
-
-        <Button variant="contained" color="primary">
-          Hello World
-        </Button>
+              </thead>
+              <tbody>
+                {this.state.stateHistory.map((state) => {
+                  return (
+                    <tr key={state.CurrentTime}>
+                      <td>{state.CurrentTime}</td>
+                      <td>{state.State}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </Grid>
+        </Grid>
       </div>
     );
   }
