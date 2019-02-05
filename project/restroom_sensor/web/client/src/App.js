@@ -1,8 +1,6 @@
-import React, { Component } from "react";
-import "./App.css";
-
 import _ from "lodash";
 import moment from "moment";
+import React, { Component } from "react";
 import WebSocket from "react-websocket";
 
 import Card from "@material-ui/core/Card";
