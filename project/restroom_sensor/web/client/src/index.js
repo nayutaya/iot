@@ -3,4 +3,7 @@ import ReactDOM from "react-dom";
 
 import App from "./App";
 
-ReactDOM.render(<App />, document.getElementById("root"));
+const wsUrl = "ws://localhost:8080/";
+// const wsUrl = window.location.href.replace("http://", "ws://");
+
+ReactDOM.render(<App wsUrl={wsUrl}/>, document.getElementById("root"));

@@ -24,49 +24,36 @@ export default class App extends Component {
     };
   }
 
-  componentDidMount() {
-    console.log("componentDidMount");
-  }
-
-  componentWillUnmount() {
-    console.log("componentWillUnmount");
-  }
-
   onMessage(data) {
     const stateHistory =
         _(this.state.stateHistory)
           .concat(JSON.parse(data))
-          .sortBy((s) => s.CurrentTime)
-          .reverse()
+          .sortBy((s) => -s.CurrentTime)
           .slice(0, 10)
           .value();
-    // console.log("stateHistory:", stateHistory);
-    const currentState = stateHistory[0];
-    this.setState({stateHistory, currentState});
+    this.setState({
+      stateHistory,
+      currentState: stateHistory[0],
+    });
   }
 
   render() {
     const formatTime = (time) => {
       return moment(new Date(time)).format("YYYY/MM/DD HH:mm:ss");
     };
-    const stateMessages = {
-      BUSY: "トイレは使用中です",
-      FREE: "トイレは空いています",
-      UNKNOWN: "トイレの照明が点きっぱなしかも？",
-    }
-    const stateTable = {
-      BUSY:    {color: "#ff9999", short: "使用中", message: "トイレは使用中です"},
-      FREE:    {color: "#b3ffb3", short: "空き",   message: "トイレは空いています"},
-      UNKNOWN: {color: "#ff9900", short: "不明",   message: "トイレの照明が点きっぱなしかも？"},
-    }
     const getState = (state) => {
+      const stateTable = {
+        BUSY:    {color: "#ff9999", short: "使用中", message: "トイレは使用中です"},
+        FREE:    {color: "#b3ffb3", short: "空き",   message: "トイレは空いています"},
+        UNKNOWN: {color: "#ff9900", short: "不明",   message: "トイレの照明が点きっぱなしかも？"},
+      };
       return (stateTable.hasOwnProperty(state) ? stateTable[state] : stateTable.UNKNOWN);
-    }
+    };
     const {currentState} = this.state;
 
     return (
       <div className="App">
-        <WebSocket url="ws://localhost:8080/" onMessage={(data) => this.onMessage(data)}/>
+        <WebSocket url={this.props.wsUrl} onMessage={(data) => this.onMessage(data)}/>
         <CssBaseline />
 
         <Grid container direction="row" justify="center" alignItems="flex-start" spacing={16}>
@@ -78,7 +65,7 @@ export default class App extends Component {
               <CardContent>
                 {(currentState == null ? null :
                   <Typography component="p">
-                    <div style={{backgroundColor: getState(currentState.State).color}}>状態: {getState(currentState.State).message}</div>
+                    状態: <span style={{backgroundColor: getState(currentState.State).color}}>{getState(currentState.State).message}</span>
                   </Typography>
                 )}
               </CardContent>
