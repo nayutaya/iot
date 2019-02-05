@@ -7,6 +7,7 @@ module.exports = ({webApiHost, webApiPort, stateSubject, stateHistorySubject}) =
   const expressWs = require("express-ws")(app);
 
   app.use(cors());
+  app.use(express.static(__dirname + "/../client/build"));
 
   app.get("/state.json", (req, res, next) => {
     res.json({
