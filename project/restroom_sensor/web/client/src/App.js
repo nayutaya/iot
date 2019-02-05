@@ -4,6 +4,8 @@ import "./App.css";
 import _ from "lodash";
 import WebSocket from "react-websocket";
 
+import Button from "@material-ui/core/Button";
+
 export default class App extends Component {
   constructor(props) {
     super(props);
@@ -63,6 +65,10 @@ export default class App extends Component {
             })}
           </tbody>
         </table>
+
+        <Button variant="contained" color="primary">
+          Hello World
+        </Button>
       </div>
     );
   }
