@@ -13,6 +13,11 @@
   },
   "license": "MIT",
   "main": "src/index.js",
+  "nodemonConfig": {
+    "ignore": [
+      "client/src/*.js"
+    ]
+  },
   "scripts": {
     "start": "nodemon src/index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
