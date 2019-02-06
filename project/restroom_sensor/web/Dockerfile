@@ -9,6 +9,7 @@ RUN cd /root/ \
   && npm install
 
 COPY ./client/ /root/client/
+ARG REACT_APP_LOCATION_NAME
 RUN cd /root/client/ \
   && npm run build
 
