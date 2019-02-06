@@ -24,6 +24,10 @@ export default class App extends Component {
     };
   }
 
+  componentDidMount() {
+    document.title = this.props.locationName;
+  }
+
   onMessage(data) {
     const stateHistory =
         _(this.state.stateHistory)
