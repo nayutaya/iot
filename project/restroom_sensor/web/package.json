@@ -1,0 +1,25 @@
+{
+  "name": "web",
+  "version": "0.0.0",
+  "author": "Yuya Kato",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.16.4",
+    "express-ws": "^4.0.0",
+    "lodash": "^4.17.11",
+    "mqtt": "^2.18.8",
+    "nodemon": "^1.18.9",
+    "rxjs": "^6.4.0"
+  },
+  "license": "MIT",
+  "main": "src/index.js",
+  "nodemonConfig": {
+    "ignore": [
+      "client/src/*.js"
+    ]
+  },
+  "scripts": {
+    "start": "nodemon src/index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  }
+}
