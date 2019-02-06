@@ -38,13 +38,16 @@ export default class App extends Component {
 
     const isFirstReceiving = (this.state.stateHistory.length === 0);
     const isStateChanged   = (stateHistory.length >= 2 && stateHistory[0].State !== stateHistory[1].State);
-    if ( isFirstReceiving ) {
-      console.log("最初の受信です");
-      // TODO: faviconを更新する。
-    }
-    if ( isStateChanged ) {
-      console.log("ステータスが変化しました:", [new Date(), stateHistory[0].State, stateHistory[1].State]);
-      // TODO: faviconを更新する。
+    if ( isFirstReceiving || isStateChanged ) {
+      const link = document.querySelector("link[rel*='icon']");
+      const favicons = {
+        BUSY:    "/favicon_busy.png",
+        FREE:    "/favicon_free.png",
+        UNKNOWN: "/favicon_unknown.png",
+      };
+      if ( link && favicons.hasOwnProperty(stateHistory[0].State) ) {
+        link.href = favicons[stateHistory[0].State];
+      }
     }
 
     this.setState({
