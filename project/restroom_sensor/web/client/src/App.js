@@ -60,7 +60,7 @@ export default class App extends Component {
           <Grid item xs={4}>
             <Card>
               <CardHeader
-                  title="京都オフィス5階 トイレ"
+                  title={this.props.locationName}
                   subheader={currentState == null ? "-" : formatTime(currentState.CurrentTime)} />
               <CardContent>
                 {(currentState == null ? null :
