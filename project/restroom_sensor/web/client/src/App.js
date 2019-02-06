@@ -35,6 +35,18 @@ export default class App extends Component {
           .sortBy((s) => -s.CurrentTime)
           .slice(0, 10)
           .value();
+
+    const isFirstReceiving = (this.state.stateHistory.length === 0);
+    const isStateChanged   = (stateHistory.length >= 2 && stateHistory[0].State !== stateHistory[1].State);
+    if ( isFirstReceiving ) {
+      console.log("最初の受信です");
+      // TODO: faviconを更新する。
+    }
+    if ( isStateChanged ) {
+      console.log("ステータスが変化しました:", [new Date(), stateHistory[0].State, stateHistory[1].State]);
+      // TODO: faviconを更新する。
+    }
+
     this.setState({
       stateHistory,
       currentState: stateHistory[0],
