@@ -3,7 +3,7 @@
 #include <NeoPixelBus.h>
 
 constexpr uint8_t  kLedPin   = 2;
-constexpr uint16_t kLedCount = 1;
+constexpr uint16_t kLedCount = 8;
 
 NeoPixelBus<NeoGrbFeature, NeoEsp8266AsyncUart1800KbpsMethod> strip(kLedCount, kLedPin);
 RgbColor red(255, 0, 0);
@@ -21,12 +21,14 @@ void setup() {
 }
 
 void loop() {
-  switch ( count % 5 ) {
-    case 0: strip.SetPixelColor(0, red  ); break;
-    case 1: strip.SetPixelColor(0, green); break;
-    case 2: strip.SetPixelColor(0, blue ); break;
-    case 3: strip.SetPixelColor(0, white); break;
-    case 4: strip.SetPixelColor(0, black); break;
+  for ( int i = 0; i < kLedCount; i++ ) {
+    switch ( (count + i) % 5 ) {
+      case 0: strip.SetPixelColor(i, red  ); break;
+      case 1: strip.SetPixelColor(i, green); break;
+      case 2: strip.SetPixelColor(i, blue ); break;
+      case 3: strip.SetPixelColor(i, white); break;
+      case 4: strip.SetPixelColor(i, black); break;
+    }
   }
   strip.Show();
 
