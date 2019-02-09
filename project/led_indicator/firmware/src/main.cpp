@@ -107,7 +107,7 @@ void setupMqtt() {
           const uint8_t red   = color["Red"];
           const uint8_t green = color["Green"];
           const uint8_t blue  = color["Blue"];
-          setLedColor(RgbColor(red, green, blue));
+          setLedColor(RgbColor(red / 8, green / 8, blue / 8));
         }
       }
     }
