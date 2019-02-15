@@ -1,0 +1,13 @@
+{
+  "name": "netatmo-tool",
+  "version": "0.0.0",
+  "author": "Yuya Kato",
+  "dependencies": {
+    "netatmo": "^2.2.2"
+  },
+  "license": "MIT",
+  "main": "src/index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  }
+}
