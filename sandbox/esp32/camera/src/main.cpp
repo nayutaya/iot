@@ -100,15 +100,10 @@ void setup() {
   config.fb_count     = 1;
 
   esp_err_t err = esp_camera_init(&config);
-  Serial.printf("esp_camera_init: 0x%x", err);
-  if (err != ESP_OK) {
-    Serial.printf("Camera init failed with error 0x%x", err);
-    return;
-  }
+  Serial.printf("esp_camera_init: 0x%x\n", err);
 
-  sensor_t *s = esp_camera_sensor_get();
-  s->set_framesize(s, FRAMESIZE_QVGA);
-
+  // sensor_t *s = esp_camera_sensor_get();
+  // s->set_framesize(s, FRAMESIZE_QVGA);
 }
 
 void handleOta() {
