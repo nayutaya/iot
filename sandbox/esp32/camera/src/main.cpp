@@ -28,6 +28,8 @@ extern const char *kWifiPassword;
 
 void setupSerial() {
   Serial.begin(115200);
+  Serial.setDebugOutput(true);
+  Serial.println();
 }
 
 void setupOta() {
@@ -103,6 +105,10 @@ void setup() {
     Serial.printf("Camera init failed with error 0x%x", err);
     return;
   }
+
+  sensor_t *s = esp_camera_sensor_get();
+  s->set_framesize(s, FRAMESIZE_QVGA);
+
 }
 
 void handleOta() {
@@ -116,6 +122,12 @@ void loop() {
   // digitalWrite(kLedPin, HIGH);
   // delay(1000);
   // digitalWrite(kLedPin, LOW);
+
+  camera_fb_t *fb = esp_camera_fb_get();
+  if ( fb ) {
+    Serial.printf("width: %d, height: %d, buf: 0x%x, len: %d\n", fb->width, fb->height, fb->buf, fb->len);
+    esp_camera_fb_return(fb);
+  }
 
   delay(1000);  // [ms]
 }
