@@ -10,23 +10,22 @@ extern const char    *kWifiPassword;
 extern const char    *kMqttServerAddress;
 extern const uint16_t kMqttServerPort;
 
-constexpr int8_t PWDN_GPIO_NUM   =  32;
-constexpr int8_t RESET_GPIO_NUM  =  -1;
-constexpr int8_t XCLK_GPIO_NUM   =   0;
-constexpr int8_t SIOD_GPIO_NUM   =  26;
-constexpr int8_t SIOC_GPIO_NUM   =  27;
-
-constexpr int8_t Y9_GPIO_NUM     =  35;
-constexpr int8_t Y8_GPIO_NUM     =  34;
-constexpr int8_t Y7_GPIO_NUM     =  39;
-constexpr int8_t Y6_GPIO_NUM     =  36;
-constexpr int8_t Y5_GPIO_NUM     =  21;
-constexpr int8_t Y4_GPIO_NUM     =  19;
-constexpr int8_t Y3_GPIO_NUM     =  18;
-constexpr int8_t Y2_GPIO_NUM     =   5;
-constexpr int8_t VSYNC_GPIO_NUM  =  25;
-constexpr int8_t HREF_GPIO_NUM   =  23;
-constexpr int8_t PCLK_GPIO_NUM   =  22;
+constexpr int PWDN_GPIO_NUM   =  32;
+constexpr int RESET_GPIO_NUM  =  -1;
+constexpr int XCLK_GPIO_NUM   =   0;
+constexpr int SIOD_GPIO_NUM   =  26;
+constexpr int SIOC_GPIO_NUM   =  27;
+constexpr int Y9_GPIO_NUM     =  35;
+constexpr int Y8_GPIO_NUM     =  34;
+constexpr int Y7_GPIO_NUM     =  39;
+constexpr int Y6_GPIO_NUM     =  36;
+constexpr int Y5_GPIO_NUM     =  21;
+constexpr int Y4_GPIO_NUM     =  19;
+constexpr int Y3_GPIO_NUM     =  18;
+constexpr int Y2_GPIO_NUM     =   5;
+constexpr int VSYNC_GPIO_NUM  =  25;
+constexpr int HREF_GPIO_NUM   =  23;
+constexpr int PCLK_GPIO_NUM   =  22;
 
 WiFiClient g_wifi_client;
 PubSubClient g_pub_sub_client(g_wifi_client);
@@ -75,10 +74,7 @@ void setupOta() {
   Serial.println(ArduinoOTA.getHostname());
 }
 
-void setup() {
-  setupSerial();
-  setupOta();
-
+void setupCamera() {
   camera_config_t config;
   config.ledc_channel = LEDC_CHANNEL_0;
   config.ledc_timer   = LEDC_TIMER_0;
@@ -109,21 +105,33 @@ void setup() {
 
   // sensor_t *s = esp_camera_sensor_get();
   // s->set_framesize(s, FRAMESIZE_QVGA);
+}
 
+void setupMqtt() {
   g_pub_sub_client.setServer(kMqttServerAddress, kMqttServerPort);
+}
+
+void setup() {
+  setupSerial();
+  setupOta();
+  setupCamera();
+  setupMqtt();
 }
 
 void handleOta() {
   ArduinoOTA.handle();
 }
 
-void loop() {
-  handleOta();
-
+void handleMqtt() {
   if ( !g_pub_sub_client.connected() ) {
     g_pub_sub_client.connect("esp32");
   }
   g_pub_sub_client.loop();
+}
+
+void loop() {
+  handleOta();
+  handleMqtt();
 
   camera_fb_t *fb = esp_camera_fb_get();
   if ( fb ) {
@@ -131,9 +139,6 @@ void loop() {
     g_pub_sub_client.publish("test", fb->buf, fb->len);
     esp_camera_fb_return(fb);
   }
-
-  const uint32_t current_time = millis();
-  static uint32_t last_time = 0;
 
   delay(1000);  // [ms]
 }
