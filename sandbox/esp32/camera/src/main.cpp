@@ -3,8 +3,12 @@
 #include <esp_camera.h>
 #include <WiFi.h>
 
-extern const char *kWifiSsid;
-extern const char *kWifiPassword;
+#include <PubSubClient.h>
+
+extern const char    *kWifiSsid;
+extern const char    *kWifiPassword;
+extern const char    *kMqttServerAddress;
+extern const uint16_t kMqttServerPort;
 
 // constexpr uint8_t kLedPin = 2;
 
@@ -25,6 +29,9 @@ constexpr int8_t Y2_GPIO_NUM     =   5;
 constexpr int8_t VSYNC_GPIO_NUM  =  25;
 constexpr int8_t HREF_GPIO_NUM   =  23;
 constexpr int8_t PCLK_GPIO_NUM   =  22;
+
+WiFiClient g_wifi_client;
+PubSubClient g_pub_sub_client(g_wifi_client);
 
 void setupSerial() {
   Serial.begin(115200);
@@ -104,6 +111,8 @@ void setup() {
 
   // sensor_t *s = esp_camera_sensor_get();
   // s->set_framesize(s, FRAMESIZE_QVGA);
+
+  g_pub_sub_client.setServer(kMqttServerAddress, kMqttServerPort);
 }
 
 void handleOta() {
@@ -112,6 +121,11 @@ void handleOta() {
 
 void loop() {
   handleOta();
+
+  if ( !g_pub_sub_client.connected() ) {
+    g_pub_sub_client.connect("esp32");
+  }
+  g_pub_sub_client.loop();
 
   // Serial.println("Hello world!");
   // digitalWrite(kLedPin, HIGH);
@@ -122,6 +136,15 @@ void loop() {
   if ( fb ) {
     Serial.printf("width: %d, height: %d, buf: 0x%x, len: %d\n", fb->width, fb->height, fb->buf, fb->len);
     esp_camera_fb_return(fb);
+  }
+
+  const uint32_t current_time = millis();
+  static uint32_t last_time = 0;
+
+  if ( current_time - last_time >= 1000 ) {
+    g_pub_sub_client.publish("test", "hello");
+    Serial.println("publish");
+    last_time = current_time;
   }
 
   delay(1000);  // [ms]
