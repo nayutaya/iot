@@ -1,5 +1,7 @@
 #!/usr/bin/env node
 
+const fs = require("fs");
+
 const mqtt = require("mqtt");
 
 const MQTT_SERVER_URL = process.env.MQTT_SERVER_URL;
@@ -19,4 +21,8 @@ client.on("connect", () => {
 
 client.on("message", (topic, message) => {
   console.log("message:", [topic, message]);
+  const time = new Date().getTime();
+  const filePath = "out/" + String(time) + ".bin"
+  console.log(filePath);
+  fs.writeFileSync(filePath, message)
 });
