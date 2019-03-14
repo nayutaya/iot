@@ -10,8 +10,6 @@ extern const char    *kWifiPassword;
 extern const char    *kMqttServerAddress;
 extern const uint16_t kMqttServerPort;
 
-// constexpr uint8_t kLedPin = 2;
-
 constexpr int8_t PWDN_GPIO_NUM   =  32;
 constexpr int8_t RESET_GPIO_NUM  =  -1;
 constexpr int8_t XCLK_GPIO_NUM   =   0;
@@ -127,25 +125,15 @@ void loop() {
   }
   g_pub_sub_client.loop();
 
-  // Serial.println("Hello world!");
-  // digitalWrite(kLedPin, HIGH);
-  // delay(1000);
-  // digitalWrite(kLedPin, LOW);
-
   camera_fb_t *fb = esp_camera_fb_get();
   if ( fb ) {
     Serial.printf("width: %d, height: %d, buf: 0x%x, len: %d\n", fb->width, fb->height, fb->buf, fb->len);
+    g_pub_sub_client.publish("test", fb->buf, fb->len);
     esp_camera_fb_return(fb);
   }
 
   const uint32_t current_time = millis();
   static uint32_t last_time = 0;
-
-  if ( current_time - last_time >= 1000 ) {
-    g_pub_sub_client.publish("test", "hello");
-    Serial.println("publish");
-    last_time = current_time;
-  }
 
   delay(1000);  // [ms]
 }
