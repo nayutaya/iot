@@ -10,22 +10,23 @@ extern const char    *kWifiPassword;
 extern const char    *kMqttServerAddress;
 extern const uint16_t kMqttServerPort;
 
-constexpr int PWDN_GPIO_NUM   =  32;
-constexpr int RESET_GPIO_NUM  =  -1;
-constexpr int XCLK_GPIO_NUM   =   0;
-constexpr int SIOD_GPIO_NUM   =  26;
-constexpr int SIOC_GPIO_NUM   =  27;
-constexpr int Y9_GPIO_NUM     =  35;
-constexpr int Y8_GPIO_NUM     =  34;
-constexpr int Y7_GPIO_NUM     =  39;
-constexpr int Y6_GPIO_NUM     =  36;
-constexpr int Y5_GPIO_NUM     =  21;
-constexpr int Y4_GPIO_NUM     =  19;
-constexpr int Y3_GPIO_NUM     =  18;
-constexpr int Y2_GPIO_NUM     =   5;
-constexpr int VSYNC_GPIO_NUM  =  25;
-constexpr int HREF_GPIO_NUM   =  23;
-constexpr int PCLK_GPIO_NUM   =  22;
+// REF: https://github.com/SeeedDocument/forum_doc/blob/master/reg/ESP32_CAM_V1.6.pdf
+constexpr int kCameraPin_PWDN   =  32;
+constexpr int kCameraPin_RESET  =  -1;  // NC
+constexpr int kCameraPin_XCLK   =   0;
+constexpr int kCameraPin_SIOD   =  26;
+constexpr int kCameraPin_SIOC   =  27;
+constexpr int kCameraPin_Y9     =  35;
+constexpr int kCameraPin_Y8     =  34;
+constexpr int kCameraPin_Y7     =  39;
+constexpr int kCameraPin_Y6     =  36;
+constexpr int kCameraPin_Y5     =  21;
+constexpr int kCameraPin_Y4     =  19;
+constexpr int kCameraPin_Y3     =  18;
+constexpr int kCameraPin_Y2     =   5;
+constexpr int kCameraPin_VSYNC  =  25;
+constexpr int kCameraPin_HREF   =  23;
+constexpr int kCameraPin_PCLK   =  22;
 
 WiFiClient g_wifi_client;
 PubSubClient g_pub_sub_client(g_wifi_client);
@@ -75,30 +76,31 @@ void setupOta() {
 }
 
 void setupCamera() {
-  camera_config_t config;
-  config.ledc_channel = LEDC_CHANNEL_0;
-  config.ledc_timer   = LEDC_TIMER_0;
-  config.pin_d0       = Y2_GPIO_NUM;
-  config.pin_d1       = Y3_GPIO_NUM;
-  config.pin_d2       = Y4_GPIO_NUM;
-  config.pin_d3       = Y5_GPIO_NUM;
-  config.pin_d4       = Y6_GPIO_NUM;
-  config.pin_d5       = Y7_GPIO_NUM;
-  config.pin_d6       = Y8_GPIO_NUM;
-  config.pin_d7       = Y9_GPIO_NUM;
-  config.pin_xclk     = XCLK_GPIO_NUM;
-  config.pin_pclk     = PCLK_GPIO_NUM;
-  config.pin_vsync    = VSYNC_GPIO_NUM;
-  config.pin_href     = HREF_GPIO_NUM;
-  config.pin_sscb_sda = SIOD_GPIO_NUM;
-  config.pin_sscb_scl = SIOC_GPIO_NUM;
-  config.pin_pwdn     = PWDN_GPIO_NUM;
-  config.pin_reset    = RESET_GPIO_NUM;
-  config.xclk_freq_hz = 20000000;
-  config.pixel_format = PIXFORMAT_JPEG;
-  config.frame_size   = FRAMESIZE_SVGA;
-  config.jpeg_quality = 10;
-  config.fb_count     = 1;
+  const camera_config_t config = {
+    .pin_pwdn     = kCameraPin_PWDN,
+    .pin_reset    = kCameraPin_RESET,
+    .pin_xclk     = kCameraPin_XCLK,
+    .pin_sscb_sda = kCameraPin_SIOD,
+    .pin_sscb_scl = kCameraPin_SIOC,
+    .pin_d7       = kCameraPin_Y9,
+    .pin_d6       = kCameraPin_Y8,
+    .pin_d5       = kCameraPin_Y7,
+    .pin_d4       = kCameraPin_Y6,
+    .pin_d3       = kCameraPin_Y5,
+    .pin_d2       = kCameraPin_Y4,
+    .pin_d1       = kCameraPin_Y3,
+    .pin_d0       = kCameraPin_Y2,
+    .pin_vsync    = kCameraPin_VSYNC,
+    .pin_href     = kCameraPin_HREF,
+    .pin_pclk     = kCameraPin_PCLK,
+    .xclk_freq_hz = 20000000,
+    .ledc_timer   = LEDC_TIMER_0,
+    .ledc_channel = LEDC_CHANNEL_0,
+    .pixel_format = PIXFORMAT_JPEG,
+    .frame_size   = FRAMESIZE_SVGA,
+    .jpeg_quality = 10,
+    .fb_count     = 1,
+  };
 
   esp_err_t err = esp_camera_init(&config);
   Serial.printf("esp_camera_init: 0x%x\n", err);

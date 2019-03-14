@@ -22,7 +22,7 @@ client.on("connect", () => {
 client.on("message", (topic, message) => {
   console.log("message:", [topic, message]);
   const time = new Date().getTime();
-  const filePath = "out/" + String(time) + ".bin"
+  const filePath = "out/" + String(time) + ".jpg"
   console.log(filePath);
   fs.writeFileSync(filePath, message)
 });
