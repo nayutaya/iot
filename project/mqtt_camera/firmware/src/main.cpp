@@ -35,11 +35,11 @@ void setupSerial() {
   Serial.println();
 }
 
-void setupWifi(const char * const ssid, const char * const password) {
-  Serial.printf("[WiFi] Connecting to %s...\n", ssid);
+void setupWifi() {
+  Serial.printf("[WiFi] Connecting to %s...\n", kWifiSsid);
 
   WiFi.mode(WIFI_STA);
-  WiFi.begin(ssid, password);
+  WiFi.begin(kWifiSsid, kWifiPassword);
   while ( WiFi.waitForConnectResult() != WL_CONNECTED ) {
     Serial.println("[WiFi] Connection Failed! Rebooting...");
     delay(5000);
@@ -96,7 +96,7 @@ void setupCamera() {
   };
 
   const esp_err_t err = esp_camera_init(&config);
-  Serial.printf("[Camera] esp_camera_init: 0x%x\n", err);
+  Serial.printf("[Camera] esp_camera_init: 0x%08x\n", err);
 
   // sensor_t *s = esp_camera_sensor_get();
   // s->set_framesize(s, FRAMESIZE_QVGA);
@@ -105,7 +105,7 @@ void setupCamera() {
 void setupMqtt() {
   g_pub_sub_client.setServer(kMqttServerAddress, kMqttServerPort);
   g_pub_sub_client.setCallback([](const char *topic, const byte *payload, const uint32_t length) {
-    Serial.printf("[MQTT] topic: %s, payload: 0x%08x, length: %d\n", topic, (unsigned int)payload, length);
+    Serial.printf("[MQTT] Callback(topic: %s, payload: 0x%08x, length: %d)\n", topic, (unsigned int)payload, length);
     if ( String(topic).equals(kMqttRequestTopic) ) {
       constexpr size_t buffer_size = 256;
       char buffer[buffer_size] = {};
@@ -115,20 +115,20 @@ void setupMqtt() {
       const auto error = deserializeJson(json_doc, buffer);
       if ( error ) return;
       // TODO: 撮影要求電文を解析する。
-      Serial.println("[MQTT] capture command");
+      Serial.println("[MQTT] command: capture");
     }
   });
 }
 
 void setup() {
   setupSerial();
-  setupWifi(kWifiSsid, kWifiPassword);
+  setupWifi();
   setupOta();
   setupCamera();
   setupMqtt();
 
-  Serial.printf("WiFi.localIP: %s\n", WiFi.localIP().toString().c_str());
-  Serial.printf("ArduinoOTA.getHostname: %s\n", ArduinoOTA.getHostname().c_str());
+  Serial.printf("[WiFi] IP Address: %s\n", WiFi.localIP().toString().c_str());
+  Serial.printf("[WiFi] Host Name: %s\n", ArduinoOTA.getHostname().c_str());
 }
 
 void handleOta() {
@@ -152,7 +152,7 @@ void loop() {
 
   camera_fb_t *fb = esp_camera_fb_get();
   if ( fb ) {
-    Serial.printf("[Camera] width: %d, height: %d, buf: 0x%x, len: %d\n", fb->width, fb->height, (unsigned int)fb->buf, fb->len);
+    Serial.printf("[Camera] width: %d, height: %d, buffer: 0x%08x, len: %d\n", fb->width, fb->height, (unsigned int)fb->buf, fb->len);
     g_pub_sub_client.publish(kMqttResponseTopic, fb->buf, fb->len);
     esp_camera_fb_return(fb);
   }
