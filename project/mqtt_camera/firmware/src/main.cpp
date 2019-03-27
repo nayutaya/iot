@@ -99,9 +99,6 @@ void setupCamera() {
 
   const esp_err_t err = esp_camera_init(&config);
   Serial.printf("[Camera] esp_camera_init: 0x%08x\n", err);
-
-  // sensor_t *s = esp_camera_sensor_get();
-  // s->set_framesize(s, FRAMESIZE_QVGA);
 }
 
 void setupMqtt() {
@@ -110,11 +107,9 @@ void setupMqtt() {
     Serial.printf("[MQTT] Callback(topic: %s, payload: 0x%08x, length: %d)\n", topic, (unsigned int)payload, length);
     if ( String(topic).equals(kMqttRequestTopic) ) {
       constexpr size_t buffer_size = 256;
-      char buffer[buffer_size] = {};
       if ( length > buffer_size ) return;
-      memcpy(buffer, payload, length);
-      StaticJsonDocument<256> json_doc;
-      const auto error = deserializeJson(json_doc, buffer);
+      StaticJsonDocument<buffer_size> json_doc;
+      const auto error = deserializeJson(json_doc, payload, length);
       if ( error ) return;
       // TODO: 撮影要求電文を解析する。
       Serial.println("[MQTT] command: capture");
