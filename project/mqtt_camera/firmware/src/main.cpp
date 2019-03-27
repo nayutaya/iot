@@ -29,6 +29,8 @@ constexpr int kCameraPin_PCLK   =  22;
 WiFiClient g_wifi_client;
 PubSubClient g_pub_sub_client(g_wifi_client);
 
+bool g_is_capture_requested = false;
+
 void setupSerial() {
   Serial.begin(115200);
   Serial.setDebugOutput(true);
@@ -116,6 +118,7 @@ void setupMqtt() {
       if ( error ) return;
       // TODO: 撮影要求電文を解析する。
       Serial.println("[MQTT] command: capture");
+      g_is_capture_requested = true;
     }
   });
 }
@@ -148,14 +151,16 @@ void loop() {
   handleOta();
   handleMqtt();
 
-  // TOOD: 撮影要求電文の受信処理を追加する。
+  if ( g_is_capture_requested ) {
+    g_is_capture_requested = false;
 
-  camera_fb_t *fb = esp_camera_fb_get();
-  if ( fb ) {
-    Serial.printf("[Camera] width: %d, height: %d, buffer: 0x%08x, len: %d\n", fb->width, fb->height, (unsigned int)fb->buf, fb->len);
-    g_pub_sub_client.publish(kMqttResponseTopic, fb->buf, fb->len);
-    esp_camera_fb_return(fb);
+    camera_fb_t *fb = esp_camera_fb_get();
+    if ( fb ) {
+      Serial.printf("[Camera] width: %d, height: %d, buffer: 0x%08x, len: %d\n", fb->width, fb->height, (unsigned int)fb->buf, fb->len);
+      g_pub_sub_client.publish(kMqttResponseTopic, fb->buf, fb->len);
+      esp_camera_fb_return(fb);
+    }
   }
 
-  delay(1000);  // [ms]
+  delay(100);  // [ms]
 }
