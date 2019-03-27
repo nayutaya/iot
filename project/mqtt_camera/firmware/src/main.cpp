@@ -40,28 +40,30 @@ void setupSerial() {
   Serial.println();
 }
 
-void setupOta() {
-  Serial.printf("Connecting to %s...\n", kWifiSsid);
+void setupWifi(const char * const ssid, const char * const password) {
+  Serial.printf("[WiFi] Connecting to %s...\n", ssid);
 
   WiFi.mode(WIFI_STA);
-  WiFi.begin(kWifiSsid, kWifiPassword);
+  WiFi.begin(ssid, password);
   while ( WiFi.waitForConnectResult() != WL_CONNECTED ) {
-    Serial.println("Connection Failed! Rebooting...");
+    Serial.println("[WiFi] Connection Failed! Rebooting...");
     delay(5000);
     ESP.restart();
   }
+}
 
+void setupOta() {
   ArduinoOTA.onStart([]() {
-    Serial.println("Start updating...");
+    Serial.println("[OTA] Start updating...");
   });
   ArduinoOTA.onEnd([]() {
     Serial.println("\nEnd");
   });
   ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) {
-    Serial.printf("Progress: %u%%\r", (progress / (total / 100)));
+    Serial.printf("[OTA] Progress: %u%%\r", (progress / (total / 100)));
   });
   ArduinoOTA.onError([](ota_error_t error) {
-    Serial.printf("Error[%u]: ", error);
+    Serial.printf("[OTA] Error[%u]: ", error);
     if      ( error == OTA_AUTH_ERROR    ) Serial.println("Auth Failed");
     else if ( error == OTA_BEGIN_ERROR   ) Serial.println("Begin Failed");
     else if ( error == OTA_CONNECT_ERROR ) Serial.println("Connect Failed");
@@ -98,8 +100,8 @@ void setupCamera() {
     .fb_count     = 1,
   };
 
-  esp_err_t err = esp_camera_init(&config);
-  Serial.printf("esp_camera_init: 0x%x\n", err);
+  const esp_err_t err = esp_camera_init(&config);
+  Serial.printf("[Camera] esp_camera_init: 0x%x\n", err);
 
   // sensor_t *s = esp_camera_sensor_get();
   // s->set_framesize(s, FRAMESIZE_QVGA);
@@ -108,7 +110,7 @@ void setupCamera() {
 void setupMqtt() {
   g_pub_sub_client.setServer(kMqttServerAddress, kMqttServerPort);
   g_pub_sub_client.setCallback([](const char *topic, const byte *payload, const uint32_t length) {
-    Serial.printf("[MQTT Callback] topic: %s, payload: 0x%08x, length: %d\n", topic, (unsigned int)payload, length);
+    Serial.printf("[MQTT] topic: %s, payload: 0x%08x, length: %d\n", topic, (unsigned int)payload, length);
     if ( String(topic).equals(kMqttRequestTopic) ) {
       constexpr size_t buffer_size = 256;
       char buffer[buffer_size] = {};
@@ -118,13 +120,14 @@ void setupMqtt() {
       const auto error = deserializeJson(json_doc, buffer);
       if ( error ) return;
       // TODO: 撮影要求電文を解析する。
-      Serial.println("capture command");
+      Serial.println("[MQTT] capture command");
     }
   });
 }
 
 void setup() {
   setupSerial();
+  setupWifi(kWifiSsid, kWifiPassword);
   setupOta();
   setupCamera();
   setupMqtt();
@@ -154,7 +157,7 @@ void loop() {
 
   camera_fb_t *fb = esp_camera_fb_get();
   if ( fb ) {
-    Serial.printf("width: %d, height: %d, buf: 0x%x, len: %d\n", fb->width, fb->height, (unsigned int)fb->buf, fb->len);
+    Serial.printf("[Camera] width: %d, height: %d, buf: 0x%x, len: %d\n", fb->width, fb->height, (unsigned int)fb->buf, fb->len);
     g_pub_sub_client.publish(kMqttResponseTopic, fb->buf, fb->len);
     esp_camera_fb_return(fb);
   }
