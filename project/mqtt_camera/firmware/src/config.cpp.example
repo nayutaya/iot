@@ -1,0 +1,9 @@
+#include "config.h"
+
+const char *kWifiSsid     = "SSID";
+const char *kWifiPassword = "PASSWORD";
+
+const char    *kMqttServerAddress = "XXX.XXX.XXX.XXX";
+const uint16_t kMqttServerPort    = 1883;
+const char    *kMqttRequestTopic  = "request";
+const char    *kMqttResponseTopic = "response";
