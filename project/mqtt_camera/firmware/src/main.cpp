@@ -40,9 +40,7 @@ void setupSerial() {
 }
 
 void setupOta() {
-  Serial.print("Connecting to ");
-  Serial.print(kWifiSsid);
-  Serial.println("...");
+  Serial.printf("Connecting to %s...\n", kWifiSsid);
 
   WiFi.mode(WIFI_STA);
   WiFi.begin(kWifiSsid, kWifiPassword);
@@ -70,11 +68,6 @@ void setupOta() {
     else if ( error == OTA_END_ERROR     ) Serial.println("End Failed");
   });
   ArduinoOTA.begin();
-
-  Serial.print("WiFi.localIP: ");
-  Serial.println(WiFi.localIP().toString());
-  Serial.print("ArduinoOTA.getHostname: ");
-  Serial.println(ArduinoOTA.getHostname());
 }
 
 void setupCamera() {
@@ -120,6 +113,9 @@ void setup() {
   setupOta();
   setupCamera();
   setupMqtt();
+
+  Serial.printf("WiFi.localIP: %s\n", WiFi.localIP().toString().c_str());
+  Serial.printf("ArduinoOTA.getHostname: %s\n", ArduinoOTA.getHostname().c_str());
 }
 
 void handleOta() {
@@ -141,7 +137,7 @@ void loop() {
 
   camera_fb_t *fb = esp_camera_fb_get();
   if ( fb ) {
-    Serial.printf("width: %d, height: %d, buf: 0x%x, len: %d\n", fb->width, fb->height, fb->buf, fb->len);
+    Serial.printf("width: %d, height: %d, buf: 0x%x, len: %d\n", fb->width, fb->height, (unsigned int)fb->buf, fb->len);
     g_pub_sub_client.publish(kMqttResponseTopic, fb->buf, fb->len);
     esp_camera_fb_return(fb);
   }
