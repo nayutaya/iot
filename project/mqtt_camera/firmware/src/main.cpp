@@ -9,6 +9,8 @@ extern const char    *kWifiSsid;
 extern const char    *kWifiPassword;
 extern const char    *kMqttServerAddress;
 extern const uint16_t kMqttServerPort;
+extern const char    *kMqttRequestTopic;
+extern const char    *kMqttResponseTopic;
 
 // REF: https://github.com/SeeedDocument/forum_doc/blob/master/reg/ESP32_CAM_V1.6.pdf
 constexpr int kCameraPin_PWDN   =  32;
@@ -135,10 +137,12 @@ void loop() {
   handleOta();
   handleMqtt();
 
+  // TOOD: 撮影要求電文の受信処理を追加する。
+
   camera_fb_t *fb = esp_camera_fb_get();
   if ( fb ) {
     Serial.printf("width: %d, height: %d, buf: 0x%x, len: %d\n", fb->width, fb->height, fb->buf, fb->len);
-    g_pub_sub_client.publish("test", fb->buf, fb->len);
+    g_pub_sub_client.publish(kMqttResponseTopic, fb->buf, fb->len);
     esp_camera_fb_return(fb);
   }
 
