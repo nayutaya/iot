@@ -3,6 +3,7 @@
 #include <esp_camera.h>
 #include <WiFi.h>
 
+#include <ArduinoJson.h>
 #include <PubSubClient.h>
 
 extern const char    *kWifiSsid;
@@ -106,6 +107,20 @@ void setupCamera() {
 
 void setupMqtt() {
   g_pub_sub_client.setServer(kMqttServerAddress, kMqttServerPort);
+  g_pub_sub_client.setCallback([](const char *topic, const byte *payload, const uint32_t length) {
+    Serial.printf("[MQTT Callback] topic: %s, payload: 0x%08x, length: %d\n", topic, (unsigned int)payload, length);
+    if ( String(topic).equals(kMqttRequestTopic) ) {
+      constexpr size_t buffer_size = 256;
+      char buffer[buffer_size] = {};
+      if ( length > buffer_size ) return;
+      memcpy(buffer, payload, length);
+      StaticJsonDocument<256> json_doc;
+      const auto error = deserializeJson(json_doc, buffer);
+      if ( error ) return;
+      // TODO: 撮影要求電文を解析する。
+      Serial.println("capture command");
+    }
+  });
 }
 
 void setup() {
@@ -124,7 +139,9 @@ void handleOta() {
 
 void handleMqtt() {
   if ( !g_pub_sub_client.connected() ) {
-    g_pub_sub_client.connect("esp32");
+    if ( g_pub_sub_client.connect(ArduinoOTA.getHostname().c_str()) ) {
+      g_pub_sub_client.subscribe(kMqttRequestTopic);
+    }
   }
   g_pub_sub_client.loop();
 }

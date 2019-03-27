@@ -3,7 +3,7 @@
 const mqtt = require("mqtt");
 
 const MQTT_SERVER_URL = process.env.MQTT_SERVER_URL;
-const MQTT_TOPIC      = process.env.MQTT_SERVER_URL;
+const MQTT_TOPIC      = process.env.MQTT_TOPIC;
 console.log("MQTT_SERVER_URL:", MQTT_SERVER_URL);
 console.log("MQTT_TOPIC:", MQTT_TOPIC);
 
