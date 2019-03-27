@@ -6,12 +6,7 @@
 #include <ArduinoJson.h>
 #include <PubSubClient.h>
 
-extern const char    *kWifiSsid;
-extern const char    *kWifiPassword;
-extern const char    *kMqttServerAddress;
-extern const uint16_t kMqttServerPort;
-extern const char    *kMqttRequestTopic;
-extern const char    *kMqttResponseTopic;
+#include "config.h"
 
 // REF: https://github.com/SeeedDocument/forum_doc/blob/master/reg/ESP32_CAM_V1.6.pdf
 constexpr int kCameraPin_PWDN   =  32;

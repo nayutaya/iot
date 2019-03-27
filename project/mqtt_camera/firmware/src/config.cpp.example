@@ -1,9 +1,9 @@
-#include <stdint.h>
+#include "config.h"
 
-extern const char *kWifiSsid     = "SSID";
-extern const char *kWifiPassword = "PASSWORD";
+const char *kWifiSsid     = "SSID";
+const char *kWifiPassword = "PASSWORD";
 
-extern const char    *kMqttServerAddress = "XXX.XXX.XXX.XXX";
-extern const uint16_t kMqttServerPort    = 1883;
-extern const char    *kMqttRequestTopic  = "request";
-extern const char    *kMqttResponseTopic = "response";
+const char    *kMqttServerAddress = "XXX.XXX.XXX.XXX";
+const uint16_t kMqttServerPort    = 1883;
+const char    *kMqttRequestTopic  = "request";
+const char    *kMqttResponseTopic = "response";
